@@ -21,10 +21,9 @@ def bo_loop(
     inter_save_dir,
 ):
     for t in trange(start_iter, num_iters):
-        gp = SingleTaskGP(train_X=train_X,
-                          train_Y=train_y,
-                          likelihood=likelihood,
-                          covar_module=kernel)
+        gp = SingleTaskGP(
+            train_X=train_X, train_Y=train_y, likelihood=likelihood, covar_module=kernel
+        )
 
         acquisition = get_acquisition(acq_name=acq_name, gp=gp, train_y=train_y)
 

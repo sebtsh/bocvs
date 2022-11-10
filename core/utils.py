@@ -58,9 +58,7 @@ def load_most_recent_state(inter_save_dir, filename):
     return train_X, train_y, state_dict, max_iter
 
 
-def maximize_fn(
-    f, bounds, dtype, num_warmup=10000, num_iter=10
-):
+def maximize_fn(f, bounds, dtype, num_warmup=10000, num_iter=10):
     """
     Approximately maximizes a function f using sampling + L-BFGS-B method adapted from
     https://github.com/fmfn/BayesianOptimization.
@@ -71,20 +69,18 @@ def maximize_fn(
     :param num_iter: int. Number of L-BFGS-B starting points.
     :return: (Array of shape (d,), max_val).
     """
-    neg_func_squeezed = lambda x: np.squeeze(-f(torch.tensor(x[None, :])).cpu().detach().numpy())
+    neg_func_squeezed = lambda x: np.squeeze(
+        -f(torch.tensor(x[None, :])).cpu().detach().numpy()
+    )
 
     # Random sampling
-    x_tries = uniform_samples(bounds=bounds,
-                              num_samples=num_warmup,
-                              dtype=dtype)
+    x_tries = uniform_samples(bounds=bounds, num_samples=num_warmup, dtype=dtype)
     f_x = torch.squeeze(f(x_tries), dim=1).cpu().detach().numpy()
     x_max = x_tries[np.argmax(f_x)]
     f_max = np.max(f_x)
 
     # L-BFGS-B
-    x_seeds = uniform_samples(bounds=bounds,
-                              num_samples=num_iter-1,
-                              dtype=dtype)
+    x_seeds = uniform_samples(bounds=bounds, num_samples=num_iter - 1, dtype=dtype)
     x_seeds = torch.cat([x_seeds, x_max[None, :]], dim=0)
     x_seeds_np = x_seeds.cpu().detach().numpy()
     for x_try in x_seeds_np:

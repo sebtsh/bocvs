@@ -1,12 +1,13 @@
 from botorch import test_functions
-from gpytorch.kernels import ScaleKernel, MaternKernel
 import torch
 
 from core.gp import sample_gp_prior
-from core.utils import minmax_normalize, maximize_fn
+from core.utils import maximize_fn
 
 
-def get_objective(config_name, objective_name, noise_std, is_input_transform, dtype, kernel, dims):
+def get_objective(
+    config_name, objective_name, noise_std, is_input_transform, dtype, kernel, dims
+):
     """
     Get objective function, bounds and its max function value (for regret).
     :param config_name: str.
@@ -24,9 +25,7 @@ def get_objective(config_name, objective_name, noise_std, is_input_transform, dt
             kernel=kernel, bounds=bounds, num_points=100, dtype=dtype
         )
 
-        _, opt_val = maximize_fn(f=obj_func,
-                                 bounds=bounds,
-                                 dtype=dtype)
+        _, opt_val = maximize_fn(f=obj_func, bounds=bounds, dtype=dtype)
 
     elif config_name == "synth":
         if objective_name == "ackley":

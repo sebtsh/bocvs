@@ -14,7 +14,7 @@ from core.utils import log, uniform_samples, load_most_recent_state
 
 
 matplotlib.use("Agg")
-ex = Experiment("MSBO")
+ex = Experiment("CS-PSQ-BO")
 ex.observers.append(FileStorageObserver("./runs"))
 
 
@@ -96,7 +96,7 @@ def main(
         is_input_transform=True,
         dtype=dtype,
         kernel=kernel,
-        dims=dims
+        dims=dims,
     )
 
     # Initialize state
