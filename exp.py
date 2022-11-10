@@ -1,5 +1,4 @@
 from gpytorch.likelihoods.gaussian_likelihood import GaussianLikelihood
-from botorch.models import SingleTaskGP
 from gpytorch.kernels import ScaleKernel, MaternKernel
 import matplotlib
 from pathlib import Path
@@ -24,10 +23,10 @@ def gpsample():
     config_name = "gpsample"
     obj_name = "gpsample"
     acq_name = "ei"
-    dims = 2
+    dims = 3
     noise_std = 0.01
     init_lengthscale = 0.1
-    num_init_points = 10
+    num_init_points = 5
     num_iters = 400
     seed = 0
     is_gpu = False
@@ -37,13 +36,13 @@ def gpsample():
 @ex.named_config
 def synth():
     config_name = "synth"
-    obj_name = "hartmann"
+    obj_name = "dixonprice"
     acq_name = "ei"
     dims = None
     noise_std = 0.01
-    init_lengthscale = 0.1
+    init_lengthscale = 0.2
     num_init_points = 10
-    num_iters = 400
+    num_iters = 200
     seed = 0
     is_gpu = False
     load_state = False
@@ -118,7 +117,7 @@ def main(
         )
         init_y = obj_func(init_X)
 
-    # GP
+    # GP parameters
     if config_name is not "gpsample":
         dims = bounds.shape[-1]
         kernel = ScaleKernel(MaternKernel(nu=2.5, ard_num_dims=dims))
@@ -126,16 +125,13 @@ def main(
 
     likelihood = GaussianLikelihood()
     likelihood.noise = noise_std
-    gp = SingleTaskGP(train_X=init_X,
-                      train_Y=init_y,
-                      likelihood=likelihood,
-                      covar_module=kernel)
 
     # Optimization loop
     final_X, final_y = bo_loop(
         train_X=init_X,
         train_y=init_y,
-        gp=gp,
+        likelihood=likelihood,
+        kernel=kernel,
         obj_func=noisy_obj_func,
         start_iter=start_iter,
         num_iters=num_iters,

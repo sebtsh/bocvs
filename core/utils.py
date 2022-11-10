@@ -71,13 +71,13 @@ def maximize_fn(
     :param num_iter: int. Number of L-BFGS-B starting points.
     :return: (Array of shape (d,), max_val).
     """
-    neg_func_squeezed = lambda x: np.squeeze((-f(torch.tensor(x[None, :]))).cpu().detach().numpy())
+    neg_func_squeezed = lambda x: np.squeeze(-f(torch.tensor(x[None, :])).cpu().detach().numpy())
 
     # Random sampling
     x_tries = uniform_samples(bounds=bounds,
                               num_samples=num_warmup,
                               dtype=dtype)
-    f_x = torch.squeeze(f(x_tries), dim=1)
+    f_x = torch.squeeze(f(x_tries), dim=1).cpu().detach().numpy()
     x_max = x_tries[np.argmax(f_x)]
     f_max = np.max(f_x)
 
@@ -91,7 +91,7 @@ def maximize_fn(
         res = minimize(
             fun=neg_func_squeezed,
             x0=x_try,
-            bounds=bounds,
+            bounds=bounds.T,
             method="L-BFGS-B",
         )
         if not res.success:
@@ -99,5 +99,5 @@ def maximize_fn(
         if -res.fun >= f_max:
             x_max = res.x
             f_max = -res.fun
-    f_argmax = np.clip(x_max, bounds[:, 0], bounds[:, 1])
+    f_argmax = np.clip(x_max, bounds[0], bounds[1])
     return torch.tensor(f_argmax), f_max

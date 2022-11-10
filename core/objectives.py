@@ -18,7 +18,7 @@ def get_objective(config_name, objective_name, noise_std, is_input_transform, dt
     bounds with shape (2, d), optimal function value.
     """
     if config_name == "gpsample":
-        bounds = torch.stack([torch.zeros((1, dims)), torch.ones((1, dims))])
+        bounds = torch.stack([torch.zeros(dims), torch.ones(dims)])
 
         obj_func = sample_gp_prior(
             kernel=kernel, bounds=bounds, num_points=100, dtype=dtype
