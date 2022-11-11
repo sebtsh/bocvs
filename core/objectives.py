@@ -6,7 +6,7 @@ from core.utils import maximize_fn
 
 
 def get_objective(
-    config_name, objective_name, noise_std, is_input_transform, dtype, kernel, dims
+    config_name, objective_name, noise_std, is_input_transform, kernel, dims
 ):
     """
     Get objective function, bounds and its max function value (for regret).
@@ -21,11 +21,9 @@ def get_objective(
     if config_name == "gpsample":
         bounds = torch.stack([torch.zeros(dims), torch.ones(dims)])
 
-        obj_func = sample_gp_prior(
-            kernel=kernel, bounds=bounds, num_points=100, dtype=dtype
-        )
+        obj_func = sample_gp_prior(kernel=kernel, bounds=bounds, num_points=100)
 
-        _, opt_val = maximize_fn(f=obj_func, bounds=bounds, dtype=dtype)
+        _, opt_val = maximize_fn(f=obj_func, bounds=bounds)
 
     elif config_name == "synth":
         if objective_name == "ackley":
@@ -56,7 +54,7 @@ def get_objective(
             raise Exception(
                 "Incorrect objective_name passed to get_objective_and_bounds"
             )
-        bounds = neg_obj.bounds.to(dtype=dtype)
+        bounds = neg_obj.bounds.to(dtype=torch.double)
         unsqueezed_obj = lambda x: neg_obj(x).unsqueeze(-1)
         if is_input_transform:
             obj_func = input_transform_wrapper(obj_func=unsqueezed_obj, bounds=bounds)

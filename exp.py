@@ -27,7 +27,7 @@ def gpsample():
     noise_std = 0.01
     init_lengthscale = 0.1
     num_init_points = 5
-    num_iters = 400
+    num_iters = 200
     seed = 0
     is_gpu = False
     load_state = False
@@ -40,7 +40,7 @@ def synth():
     acq_name = "ei"
     dims = None
     noise_std = 0.01
-    init_lengthscale = 0.2
+    init_lengthscale = 0.1
     num_init_points = 10
     num_iters = 200
     seed = 0
@@ -78,7 +78,6 @@ def main(
     filename = filename.replace(".", ",")
 
     # Torch things
-    dtype = torch.double  # bad things happen without this
     device = torch.device("cuda" if torch.cuda.is_available() and is_gpu else "cpu")
     torch.manual_seed(seed)
 
@@ -94,7 +93,6 @@ def main(
         objective_name=obj_name,
         noise_std=noise_std,
         is_input_transform=True,
-        dtype=dtype,
         kernel=kernel,
         dims=dims,
     )
@@ -112,9 +110,7 @@ def main(
         start_iter = 0
         state_dict = None
         # Initial data
-        init_X = uniform_samples(
-            bounds=bounds, num_samples=num_init_points, dtype=dtype
-        )
+        init_X = uniform_samples(bounds=bounds, num_samples=num_init_points)
         init_y = obj_func(init_X)
 
     # GP parameters

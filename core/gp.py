@@ -3,7 +3,7 @@ import torch
 from core.utils import uniform_samples
 
 
-def sample_gp_prior(kernel, bounds, num_points, dtype, jitter=1e-06):
+def sample_gp_prior(kernel, bounds, num_points, jitter=1e-06):
     """
     Sample a random function from a GP prior with mean 0 and covariance specified by a kernel.
     :param kernel: a GPyTorch kernel.
@@ -13,7 +13,7 @@ def sample_gp_prior(kernel, bounds, num_points, dtype, jitter=1e-06):
     :param jitter: float.
     :return: Callable that takes in an array of shape (n, N) and returns an array of shape (n, 1).
     """
-    points = uniform_samples(bounds=bounds, num_samples=num_points, dtype=dtype)
+    points = uniform_samples(bounds=bounds, num_samples=num_points)
     cov = kernel(points).evaluate() + jitter * torch.eye(num_points)
     f_vals = torch.distributions.MultivariateNormal(
         torch.zeros(num_points, dtype=torch.double), cov
