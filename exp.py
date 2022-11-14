@@ -7,8 +7,10 @@ from sacred import Experiment
 from sacred.observers import FileStorageObserver
 import torch
 
+from core.dists import get_dists_and_samples, get_opt_queries_and_vals
 from core.objectives import get_objective
 from core.optimization import bo_loop
+from core.psq import get_control_sets_and_costs
 from core.regret import get_simple_regret, plot_regret
 from core.utils import log, uniform_samples, load_most_recent_state
 
@@ -23,13 +25,17 @@ def gpsample():
     config_name = "gpsample"
     obj_name = "gpsample"
     acq_name = "ei"
-    dims = 3
+    dims = 6
+    control_sets_id = 0
+    costs_id = 0
+    eps_schedule_id = 0
+    marginal_var = 0.04
     noise_std = 0.01
-    init_lengthscale = 0.1
+    init_lengthscale = 0.2
     num_init_points = 5
     num_iters = 200
+    budget = 1000
     seed = 0
-    is_gpu = False
     load_state = False
 
 
@@ -39,12 +45,16 @@ def synth():
     obj_name = "dixonprice"
     acq_name = "ei"
     dims = None
+    control_sets_id = 0
+    costs_id = 0
+    eps_schedule_id = 0
+    marginal_var = 0.04
     noise_std = 0.01
-    init_lengthscale = 0.1
-    num_init_points = 10
+    init_lengthscale = 0.2
+    num_init_points = 5
     num_iters = 200
+    budget = 1000
     seed = 0
-    is_gpu = False
     load_state = False
 
 
@@ -54,17 +64,22 @@ def main(
     obj_name,
     acq_name,
     dims,
+    control_sets_id,
+    costs_id,
+    eps_schedule_id,
+    marginal_var,
     noise_std,
     init_lengthscale,
     num_init_points,
     num_iters,
+    budget,
     seed,
-    is_gpu,
     load_state,
 ):
     args = dict(locals().items())
     log(f"Running with parameters {args}")
     run_id = ex.current_run._id
+    torch.manual_seed(seed)
 
     # Directory for saving results
     base_dir = "results/" + config_name + "/"
@@ -75,11 +90,6 @@ def main(
     Path(figures_save_dir).mkdir(parents=True, exist_ok=True)
     Path(inter_save_dir).mkdir(parents=True, exist_ok=True)
     filename = f"{config_name}_{obj_name}_{acq_name}_seed-{seed}"
-    filename = filename.replace(".", ",")
-
-    # Torch things
-    device = torch.device("cuda" if torch.cuda.is_available() and is_gpu else "cpu")
-    torch.manual_seed(seed)
 
     # Objective function
     if config_name is "gpsample":  # If sampling from GP, we need to define kernel first
@@ -88,7 +98,7 @@ def main(
     else:
         kernel = None
 
-    obj_func, noisy_obj_func, opt_val, bounds = get_objective(
+    obj_func, noisy_obj_func, opt_val_det, bounds = get_objective(
         config_name=config_name,
         objective_name=obj_name,
         noise_std=noise_std,
@@ -110,7 +120,7 @@ def main(
         start_iter = 0
         state_dict = None
         # Initial data
-        init_X = uniform_samples(bounds=bounds, num_samples=num_init_points)
+        init_X = uniform_samples(bounds=bounds, n_samples=num_init_points)
         init_y = obj_func(init_X)
 
     # GP parameters
@@ -121,6 +131,21 @@ def main(
 
     likelihood = GaussianLikelihood()
     likelihood.noise = noise_std
+
+    # Control/random sets and costs
+    control_sets, random_sets, costs = get_control_sets_and_costs(
+        dims=dims, control_sets_id=control_sets_id, costs_id=costs_id
+    )
+    all_dists, all_dists_samples = get_dists_and_samples(
+        dims=dims, variance=marginal_var
+    )
+    _, opt_vals = get_opt_queries_and_vals(
+        f=obj_func,
+        control_sets=control_sets,
+        random_sets=random_sets,
+        all_dists_samples=all_dists_samples,
+        bounds=bounds,
+    )
 
     # Optimization loop
     final_X, final_y = bo_loop(

@@ -23,7 +23,7 @@ def get_objective(
 
         obj_func = sample_gp_prior(kernel=kernel, bounds=bounds, num_points=100)
 
-        _, opt_val = maximize_fn(f=obj_func, bounds=bounds)
+        _, opt_val = maximize_fn(f=obj_func, n_warmup=10000, bounds=bounds)
 
     elif config_name == "synth":
         if objective_name == "ackley":

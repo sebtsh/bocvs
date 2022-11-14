@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from scipy.stats import norm
 import torch
+import numpy as np
+
+from core.utils import expectation_det, maximize_fn
 
 
 class Distribution(ABC):
@@ -79,5 +82,85 @@ def truncnorm_variance(loc, scale, a, b):
     return (scale**2) * (1 + A - B)
 
 
+def get_truncnorm_scale(desired_var, loc, a, b):
+    low = 0.001
+    high = 100
+    if truncnorm_variance(loc, low, a, b) > desired_var:
+        raise Exception("low is too high!")
+
+    if truncnorm_variance(loc, high, a, b) < desired_var:
+        raise Exception("high is too low!")
+
+    mid = (low + high) / 2
+    curr_var = truncnorm_variance(loc, mid, a, b)
+    while not np.allclose(curr_var, desired_var):
+        mid = (low + high) / 2
+        curr_var = truncnorm_variance(loc, mid, a, b)
+        if curr_var > desired_var:
+            high = mid
+        elif curr_var <= desired_var:
+            low = mid
+
+    return mid
+
+
 def uniform_samples_1d(a, b, n_samples):
     return torch.rand(size=(n_samples,), dtype=torch.double) * (b - a) + a
+
+
+def get_dists_and_samples(dims, variance):
+    n_samples = 2**13
+
+    loc = 0.5
+    a = 0.0
+    b = 1.0
+
+    scale = get_truncnorm_scale(desired_var=variance, loc=loc, a=a, b=b)
+
+    all_dists = [TruncNormDist(loc=loc, scale=scale, a=a, b=b) for _ in range(dims)]
+
+    all_dists_samples = torch.cat(
+        [dist.sample(n_samples)[:, None] for dist in all_dists], dim=-1
+    )
+
+    return all_dists, all_dists_samples
+
+
+def get_opt_queries_and_vals(f, control_sets, random_sets, all_dists_samples, bounds):
+    m = len(control_sets)
+    dims = bounds.shape[-1]
+
+    opt_queries = []
+    opt_vals = []
+
+    for i in range(m):
+        control_set_idxs = control_sets[i]
+
+        if len(control_sets) == dims:
+            # if full control set, avoid expectation calculations
+            opt_query, opt_val = maximize_fn(f=f, n_warmup=10000, bounds=bounds)
+        else:
+            random_set_idxs = random_sets[i]
+            random_dists_samples = all_dists_samples[
+                :, random_set_idxs
+            ]  # (n_samples, d_r)
+
+            cat_idxs = np.concatenate([control_set_idxs, random_set_idxs])
+            order_idxs = np.array(
+                [np.where(cat_idxs == j)[0][0] for j in np.arange(len(cat_idxs))]
+            )
+
+            opt_query, opt_val = maximize_fn(
+                f=lambda x: expectation_det(
+                    f=f,
+                    x_control=x,
+                    random_dists_samples=random_dists_samples,
+                    order_idxs=order_idxs,
+                ),
+                bounds=bounds[:, control_set_idxs],
+            )
+
+        opt_queries.append(opt_query)
+        opt_vals.append(opt_val)
+
+    return opt_queries, opt_vals
