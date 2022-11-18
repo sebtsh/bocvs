@@ -25,16 +25,16 @@ ex.observers.append(FileStorageObserver("./runs"))
 def gpsample():
     config_name = "gpsample"
     obj_name = "gpsample"
-    acq_name = "ucb_cs"
+    acq_name = "ucb"
     dims = 3
     control_sets_id = 0
     costs_id = 0
     eps_schedule_id = 0
-    marginal_var = 0.08
+    budget = 100
+    marginal_var = 0.04
     noise_std = 0.01
     init_lengthscale = 0.1
     n_init_points = 5
-    budget = 200
     seed = 0
     load_state = False
 
@@ -44,15 +44,15 @@ def synth():
     config_name = "synth"
     obj_name = "dixonprice"
     acq_name = "ei"
-    dims = None
+    dims = 6
     control_sets_id = 0
     costs_id = 0
     eps_schedule_id = 0
+    budget = 100
     marginal_var = 0.04
     noise_std = 0.01
     init_lengthscale = 0.2
     n_init_points = 5
-    budget = 10
     seed = 0
     load_state = False
 
@@ -87,7 +87,11 @@ def main(
     Path(pickles_save_dir).mkdir(parents=True, exist_ok=True)
     Path(figures_save_dir).mkdir(parents=True, exist_ok=True)
     Path(inter_save_dir).mkdir(parents=True, exist_ok=True)
-    filename = f"{config_name}_{obj_name}_{acq_name}_seed-{seed}"
+    filename = (
+        f"{config_name}_{obj_name}_{dims}_{control_sets_id}_{costs_id}_"
+        f"{eps_schedule_id}_{budget}_{marginal_var}_{acq_name}_seed{seed}"
+    )
+    filename = filename.replace(".", ",")
 
     # Objective function
     if config_name is "gpsample":  # If sampling from GP, we need to define kernel first
@@ -203,6 +207,7 @@ def main(
             all_dists_samples,
             simple_regret,
             cumu_regret,
+            cs_cumu_regret,
             cost_per_iter,
             T,
             args,
