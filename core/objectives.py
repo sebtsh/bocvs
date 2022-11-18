@@ -21,7 +21,7 @@ def get_objective(
     if config_name == "gpsample":
         bounds = torch.stack([torch.zeros(dims), torch.ones(dims)])
 
-        obj_func = sample_gp_prior(kernel=kernel, bounds=bounds, num_points=100)
+        obj_func = sample_gp_prior(kernel=kernel, bounds=bounds, num_points=1000)
 
         _, opt_val = maximize_fn(f=obj_func, n_warmup=10000, bounds=bounds)
 

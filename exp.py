@@ -1,5 +1,5 @@
 from gpytorch.likelihoods.gaussian_likelihood import GaussianLikelihood
-from gpytorch.kernels import ScaleKernel, MaternKernel
+from gpytorch.kernels import ScaleKernel, RBFKernel
 import matplotlib
 from pathlib import Path
 import pickle
@@ -7,11 +7,12 @@ from sacred import Experiment
 from sacred.observers import FileStorageObserver
 import torch
 
-from core.dists import get_dists_and_samples, get_opt_queries_and_vals
+from core.acquisitions import get_eps_schedule
+from core.dists import get_dists_and_samples
 from core.objectives import get_objective
 from core.optimization import bo_loop
 from core.psq import get_control_sets_and_costs
-from core.regret import get_simple_regret, plot_regret
+from core.regret import get_regret, plot_regret
 from core.utils import log, uniform_samples, load_most_recent_state
 
 
@@ -24,17 +25,16 @@ ex.observers.append(FileStorageObserver("./runs"))
 def gpsample():
     config_name = "gpsample"
     obj_name = "gpsample"
-    acq_name = "ei"
-    dims = 6
+    acq_name = "ucb_cs"
+    dims = 3
     control_sets_id = 0
     costs_id = 0
     eps_schedule_id = 0
-    marginal_var = 0.04
+    marginal_var = 0.08
     noise_std = 0.01
-    init_lengthscale = 0.2
-    num_init_points = 5
-    num_iters = 200
-    budget = 1000
+    init_lengthscale = 0.1
+    n_init_points = 5
+    budget = 200
     seed = 0
     load_state = False
 
@@ -51,9 +51,8 @@ def synth():
     marginal_var = 0.04
     noise_std = 0.01
     init_lengthscale = 0.2
-    num_init_points = 5
-    num_iters = 200
-    budget = 1000
+    n_init_points = 5
+    budget = 10
     seed = 0
     load_state = False
 
@@ -70,8 +69,7 @@ def main(
     marginal_var,
     noise_std,
     init_lengthscale,
-    num_init_points,
-    num_iters,
+    n_init_points,
     budget,
     seed,
     load_state,
@@ -93,7 +91,7 @@ def main(
 
     # Objective function
     if config_name is "gpsample":  # If sampling from GP, we need to define kernel first
-        kernel = ScaleKernel(MaternKernel(nu=2.5, ard_num_dims=dims))
+        kernel = ScaleKernel(RBFKernel(ard_num_dims=dims))
         kernel.base_kernel.lengthscale = init_lengthscale
     else:
         kernel = None
@@ -109,28 +107,29 @@ def main(
 
     # Initialize state
     if load_state:
-        init_X, init_y, state_dict, max_iter = load_most_recent_state(
-            inter_save_dir=inter_save_dir, filename=filename
-        )
-        start_iter = max_iter + 1
-        if max_iter is None:  # if max_iter is None, no save states found
-            load_state = False
+        raise NotImplementedError
+        # init_X, init_y, state_dict, max_iter = load_most_recent_state(
+        #     inter_save_dir=inter_save_dir, filename=filename
+        # )
+        # start_iter = max_iter + 1
+        # if max_iter is None:  # if max_iter is None, no save states found
+        #     load_state = False
     else:
         log("Starting new run from iter 0")
         start_iter = 0
         state_dict = None
         # Initial data
-        init_X = uniform_samples(bounds=bounds, n_samples=num_init_points)
-        init_y = obj_func(init_X)
+        init_X = uniform_samples(bounds=bounds, n_samples=n_init_points)
+        init_y = noisy_obj_func(init_X)
 
     # GP parameters
     if config_name is not "gpsample":
         dims = bounds.shape[-1]
-        kernel = ScaleKernel(MaternKernel(nu=2.5, ard_num_dims=dims))
+        kernel = ScaleKernel(RBFKernel(ard_num_dims=dims))
         kernel.base_kernel.lengthscale = init_lengthscale
 
     likelihood = GaussianLikelihood()
-    likelihood.noise = noise_std
+    likelihood.noise = noise_std**2
 
     # Control/random sets and costs
     control_sets, random_sets, costs = get_control_sets_and_costs(
@@ -139,43 +138,87 @@ def main(
     all_dists, all_dists_samples = get_dists_and_samples(
         dims=dims, variance=marginal_var
     )
-    _, opt_vals = get_opt_queries_and_vals(
-        f=obj_func,
-        control_sets=control_sets,
-        random_sets=random_sets,
-        all_dists_samples=all_dists_samples,
-        bounds=bounds,
-    )
+    eps_schedule = get_eps_schedule(id=eps_schedule_id)
 
     # Optimization loop
-    final_X, final_y = bo_loop(
+    final_X, final_y, control_set_idxs, control_queries, T = bo_loop(
         train_X=init_X,
         train_y=init_y,
         likelihood=likelihood,
         kernel=kernel,
-        obj_func=noisy_obj_func,
+        noisy_obj_func=noisy_obj_func,
         start_iter=start_iter,
-        num_iters=num_iters,
+        budget=budget,
         acq_name=acq_name,
         bounds=bounds,
+        all_dists=all_dists,
+        control_sets=control_sets,
+        random_sets=random_sets,
+        all_dists_samples=all_dists_samples,
+        costs=costs,
+        eps_schedule=eps_schedule,
         filename=filename,
         inter_save_dir=inter_save_dir,
     )
     # Regret
-    chosen_X = final_X[num_init_points:]
-    simple_regret = get_simple_regret(X=chosen_X, obj_func=obj_func, opt_val=opt_val)
+    log("Calculating regret")
+    simple_regret, cumu_regret, cs_cumu_regret, cost_per_iter = get_regret(
+        control_set_idxs=control_set_idxs,
+        control_queries=control_queries,
+        obj_func=obj_func,
+        control_sets=control_sets,
+        random_sets=random_sets,
+        all_dists_samples=all_dists_samples,
+        bounds=bounds,
+        costs=costs,
+    )
+
     plot_regret(
-        regret=simple_regret,
-        num_iters=num_iters,
+        regret=cumu_regret,
+        cost_per_iter=cost_per_iter,
+        x_axis="T",
+        num_iters=T,
         save=True,
         save_dir=figures_save_dir,
-        filename=filename,
+        filename=filename + "_T",
+    )
+
+    plot_regret(
+        regret=cs_cumu_regret,
+        cost_per_iter=cost_per_iter,
+        x_axis="C",
+        num_iters=T,
+        save=True,
+        save_dir=figures_save_dir,
+        filename=filename + "_C",
     )
 
     # Save results
     pickle.dump(
-        (final_X, final_y, chosen_X, simple_regret, args),
+        (
+            final_X,
+            final_y,
+            control_set_idxs,
+            control_queries,
+            all_dists_samples,
+            simple_regret,
+            cumu_regret,
+            cost_per_iter,
+            T,
+            args,
+        ),
         open(pickles_save_dir + f"{filename}.p", "wb"),
     )
+
+    print("cumu_regret:")
+    print(cumu_regret)
+    print("control_set_idxs:")
+    print(control_set_idxs)
+    print("control_queries:")
+    print(control_queries)
+    print("final X:")
+    print(final_X)
+    print("final y:")
+    print(final_y)
 
     log(f"Completed run {run_id} with parameters {args}")

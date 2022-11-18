@@ -3,7 +3,7 @@ from scipy.stats import norm
 import torch
 import numpy as np
 
-from core.utils import expectation_det, maximize_fn
+from core.utils import expectation_det, maximize_fn, log
 
 
 class Distribution(ABC):
@@ -134,18 +134,17 @@ def get_opt_queries_and_vals(f, control_sets, random_sets, all_dists_samples, bo
     opt_vals = []
 
     for i in range(m):
-        control_set_idxs = control_sets[i]
+        log(f"Getting opt query and val for control set {i}")
+        control_set = control_sets[i]
 
-        if len(control_sets) == dims:
+        if len(control_set) == dims:
             # if full control set, avoid expectation calculations
             opt_query, opt_val = maximize_fn(f=f, n_warmup=10000, bounds=bounds)
         else:
-            random_set_idxs = random_sets[i]
-            random_dists_samples = all_dists_samples[
-                :, random_set_idxs
-            ]  # (n_samples, d_r)
+            random_set = random_sets[i]
+            random_dists_samples = all_dists_samples[:, random_set]  # (n_samples, d_r)
 
-            cat_idxs = np.concatenate([control_set_idxs, random_set_idxs])
+            cat_idxs = np.concatenate([control_set, random_set])
             order_idxs = np.array(
                 [np.where(cat_idxs == j)[0][0] for j in np.arange(len(cat_idxs))]
             )
@@ -157,10 +156,17 @@ def get_opt_queries_and_vals(f, control_sets, random_sets, all_dists_samples, bo
                     random_dists_samples=random_dists_samples,
                     order_idxs=order_idxs,
                 ),
-                bounds=bounds[:, control_set_idxs],
+                bounds=bounds[:, control_set],
             )
 
-        opt_queries.append(opt_query)
+        opt_queries.append(opt_query[None, :])
         opt_vals.append(opt_val)
 
-    return opt_queries, opt_vals
+    return opt_queries, torch.tensor(opt_vals, dtype=torch.double)
+
+
+def sample_from_random_sets(all_dists, random_set):
+    random_sample = []
+    for i in random_set:
+        random_sample.append(all_dists[i].sample(n_samples=1))
+    return torch.cat(random_sample)[None, :]
