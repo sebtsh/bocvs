@@ -1,15 +1,10 @@
 from abc import ABC, abstractmethod
-from botorch.generation import MaxPosteriorSampling
-from botorch.models import SingleTaskGP
-from contextlib import ExitStack
-from gpytorch.kernels import RFFKernel, ScaleKernel
-import gpytorch.settings as gpts
+from gpytorch.kernels import RFFKernel
 import numpy as np
 import torch
-from torch.quasirandom import SobolEngine
 
 from core.dists import get_opt_queries_and_vals
-from core.utils import maximize_fn, log
+from core.utils import maximize_fn
 
 
 def get_acquisition(acq_name):

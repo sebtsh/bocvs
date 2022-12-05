@@ -23,7 +23,6 @@ ex.observers.append(FileStorageObserver("./runs"))
 
 @ex.named_config
 def gpsample():
-    config_name = "gpsample"
     obj_name = "gpsample"
     acq_name = "ucb"
     dims = 3
@@ -40,11 +39,27 @@ def gpsample():
 
 
 @ex.named_config
-def synth():
-    config_name = "synth"
-    obj_name = "dixonprice"
-    acq_name = "ei"
+def hartmann():
+    obj_name = "hartmann"
+    acq_name = "ucb"
     dims = 6
+    control_sets_id = 0
+    costs_id = 0
+    eps_schedule_id = 0
+    budget = 100
+    marginal_var = 0.04
+    noise_std = 0.01
+    init_lengthscale = 0.2
+    n_init_points = 5
+    seed = 0
+    load_state = False
+
+
+@ex.named_config
+def plant():
+    obj_name = "plant"
+    acq_name = "ucb"
+    dims = 5
     control_sets_id = 0
     costs_id = 0
     eps_schedule_id = 0
@@ -59,7 +74,6 @@ def synth():
 
 @ex.automain
 def main(
-    config_name,
     obj_name,
     acq_name,
     dims,
@@ -80,7 +94,7 @@ def main(
     torch.manual_seed(seed)
 
     # Directory for saving results
-    base_dir = "results/" + config_name + "/"
+    base_dir = "results/" + obj_name + "/"
     pickles_save_dir = base_dir + "pickles/"
     figures_save_dir = base_dir + "figures/"
     inter_save_dir = base_dir + "inter/"
@@ -88,20 +102,19 @@ def main(
     Path(figures_save_dir).mkdir(parents=True, exist_ok=True)
     Path(inter_save_dir).mkdir(parents=True, exist_ok=True)
     filename = (
-        f"{config_name}_{obj_name}_{dims}_{control_sets_id}_{costs_id}_"
+        f"{obj_name}_{dims}_{control_sets_id}_{costs_id}_"
         f"{eps_schedule_id}_{budget}_{marginal_var}_{acq_name}_seed{seed}"
     )
     filename = filename.replace(".", ",")
 
     # Objective function
-    if config_name is "gpsample":  # If sampling from GP, we need to define kernel first
+    if obj_name is "gpsample":  # If sampling from GP, we need to define kernel first
         kernel = ScaleKernel(RBFKernel(ard_num_dims=dims))
         kernel.base_kernel.lengthscale = init_lengthscale
     else:
         kernel = None
 
     obj_func, noisy_obj_func, opt_val_det, bounds = get_objective(
-        config_name=config_name,
         objective_name=obj_name,
         noise_std=noise_std,
         is_input_transform=True,
@@ -127,7 +140,7 @@ def main(
         init_y = noisy_obj_func(init_X)
 
     # GP parameters
-    if config_name is not "gpsample":
+    if obj_name is not "gpsample":
         dims = bounds.shape[-1]
         kernel = ScaleKernel(RBFKernel(ard_num_dims=dims))
         kernel.base_kernel.lengthscale = init_lengthscale
