@@ -46,7 +46,7 @@ def hartmann():
     control_sets_id = 0
     costs_id = 0
     eps_schedule_id = 0
-    budget = 100
+    budget = 1000
     marginal_var = 0.04
     noise_std = 0.01
     init_lengthscale = 0.2
@@ -63,7 +63,7 @@ def plant():
     control_sets_id = 0
     costs_id = 0
     eps_schedule_id = 0
-    budget = 100
+    budget = 1000
     marginal_var = 0.04
     noise_std = 0.01
     init_lengthscale = 0.2
@@ -110,6 +110,7 @@ def main(
     # Objective function
     if obj_name is "gpsample":  # If sampling from GP, we need to define kernel first
         kernel = ScaleKernel(RBFKernel(ard_num_dims=dims))
+        kernel.outputscale = 1.
         kernel.base_kernel.lengthscale = init_lengthscale
     else:
         kernel = None
@@ -143,6 +144,7 @@ def main(
     if obj_name is not "gpsample":
         dims = bounds.shape[-1]
         kernel = ScaleKernel(RBFKernel(ard_num_dims=dims))
+        kernel.outputscale = 1.
         kernel.base_kernel.lengthscale = init_lengthscale
 
     likelihood = GaussianLikelihood()
@@ -208,6 +210,16 @@ def main(
         save=True,
         save_dir=figures_save_dir,
         filename=filename + "_C",
+    )
+
+    plot_regret(
+        regret=simple_regret,
+        cost_per_iter=cost_per_iter,
+        x_axis="C",
+        num_iters=T,
+        save=True,
+        save_dir=figures_save_dir,
+        filename=filename + "_Csimple",
     )
 
     # Save results
