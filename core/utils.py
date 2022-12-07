@@ -73,14 +73,14 @@ def maximize_fn(f, bounds, n_warmup=10, n_iter=10):
         -f(torch.tensor(x[None, :])).cpu().detach().numpy()
     )
 
-    #log("Starting random sampling")
+    # log("Starting random sampling")
     # Random sampling
     x_tries = uniform_samples(bounds=bounds, n_samples=n_warmup)
     f_x = torch.squeeze(f(x_tries), dim=1).cpu().detach().numpy()
     x_max = x_tries[np.argmax(f_x)]
     f_max = np.max(f_x)
 
-    #log("Starting L-BFGS-B")
+    # log("Starting L-BFGS-B")
     # L-BFGS-B
     x_seeds = uniform_samples(bounds=bounds, n_samples=n_iter - 1)
     x_seeds = torch.cat([x_seeds, x_max[None, :]], dim=0)

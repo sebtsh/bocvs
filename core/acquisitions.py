@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from gpytorch.kernels import RFFKernel
-import numpy as np
 import torch
 
 from core.dists import get_opt_queries_and_vals
@@ -8,30 +7,16 @@ from core.utils import maximize_fn
 
 
 def get_acquisition(acq_name):
-    if acq_name == "ucb_cs":
+    if acq_name == "ucb-cs":
         return UCB_PSQ_CS(beta=2.0)
     elif acq_name == "ucb":
         return UCB_PSQ(beta=2.0)
-    elif acq_name == "ucb_naive":
+    elif acq_name == "ucb-naive":
         return UCB_PSQ_Naive(beta=2.0)
     elif acq_name == "ts":
         return TS_PSQ(n_features=1024)
     else:
         raise Exception("Incorrect acq_name passed to get_acquisition")
-
-
-def get_eps_schedule(id):
-    if id == 0:
-        start_eps = 1.0
-        cutoff_iter = 40
-
-        def eps_schedule(t):
-            return start_eps * np.maximum(1 - t / cutoff_iter, 0.0)
-
-    else:
-        raise NotImplementedError
-
-    return eps_schedule
 
 
 class Acquisition(ABC):
@@ -48,7 +33,7 @@ class Acquisition(ABC):
         random_sets,
         all_dists_samples,
         bounds,
-        eps,
+        eps_schedule,
         costs,
     ):
         pass
@@ -72,7 +57,7 @@ class TS_PSQ(Acquisition):
         random_sets,
         all_dists_samples,
         bounds,
-        eps,
+        eps_schedule,
         costs,
     ):
         dims = bounds.shape[-1]
@@ -140,7 +125,7 @@ class TS_PSQ_Naive(Acquisition):
         random_sets,
         all_dists_samples,
         bounds,
-        eps,
+        eps_schedule,
         costs,
     ):
         dims = bounds.shape[-1]
@@ -194,7 +179,7 @@ class UCB_PSQ(Acquisition):
         random_sets,
         all_dists_samples,
         bounds,
-        eps,
+        eps_schedule,
         costs,
     ):
         def ucb(X):
@@ -242,7 +227,7 @@ class UCB_PSQ_CS(Acquisition):
         random_sets,
         all_dists_samples,
         bounds,
-        eps,
+        eps_schedule,
         costs,
     ):
         def ucb(X):
@@ -252,31 +237,51 @@ class UCB_PSQ_CS(Acquisition):
             return mean + self.beta * torch.sqrt(variance)
 
         dims = bounds.shape[-1]
-        skip_expectations = False
 
-        for i, control_set in enumerate(control_sets):
-            if len(control_set) == dims and np.allclose(eps, 0):
-                skip_expectations = True
+        # skip_expectations = False
+        # for i, control_set in enumerate(control_sets):
+        #     if len(control_set) == dims and np.allclose(eps, 0):
+        #         skip_expectations = True
+        #         ret_control_idx = i
+        #         ret_query, _ = maximize_fn(f=ucb, n_warmup=10000, bounds=bounds)
+        #         ret_query = ret_query[None, :]
+        #         break
+        #
+        # if not skip_expectations:
+        #     opt_queries, opt_vals = get_opt_queries_and_vals(
+        #         f=ucb,
+        #         control_sets=control_sets,
+        #         random_sets=random_sets,
+        #         all_dists_samples=all_dists_samples,
+        #         bounds=bounds,
+        #     )
+        #     max_val = torch.max(opt_vals)
+        #     ret_control_idx = torch.argmax(opt_vals).item()
+        #     for i in range(len(opt_vals)):
+        #         if opt_vals[i] + eps >= max_val:
+        #             ret_control_idx = i
+        #             break
+        #     ret_query = opt_queries[ret_control_idx]
+        #
+        # return ret_control_idx, ret_query
+
+        opt_queries, opt_vals = get_opt_queries_and_vals(
+            f=ucb,
+            control_sets=control_sets,
+            random_sets=random_sets,
+            all_dists_samples=all_dists_samples,
+            bounds=bounds,
+        )
+
+        eps = eps_schedule.next(opt_vals=opt_vals)
+
+        max_val = torch.max(opt_vals)
+        ret_control_idx = torch.argmax(opt_vals).item()
+        for i in range(len(opt_vals)):
+            if opt_vals[i] + eps >= max_val:
                 ret_control_idx = i
-                ret_query, _ = maximize_fn(f=ucb, n_warmup=10000, bounds=bounds)
-                ret_query = ret_query[None, :]
                 break
-
-        if not skip_expectations:
-            opt_queries, opt_vals = get_opt_queries_and_vals(
-                f=ucb,
-                control_sets=control_sets,
-                random_sets=random_sets,
-                all_dists_samples=all_dists_samples,
-                bounds=bounds,
-            )
-            max_val = torch.max(opt_vals)
-            ret_control_idx = torch.argmax(opt_vals).item()
-            for i in range(len(opt_vals)):
-                if opt_vals[i] + eps >= max_val:
-                    ret_control_idx = i
-                    break
-            ret_query = opt_queries[ret_control_idx]
+        ret_query = opt_queries[ret_control_idx]
 
         return ret_control_idx, ret_query
 
@@ -295,7 +300,7 @@ class UCB_PSQ_Naive(Acquisition):
         random_sets,
         all_dists_samples,
         bounds,
-        eps,
+        eps_schedule,
         costs,
     ):
         def ucb(X):

@@ -1,17 +1,17 @@
 from gpytorch.likelihoods.gaussian_likelihood import GaussianLikelihood
 from gpytorch.kernels import ScaleKernel, RBFKernel
 import matplotlib
+import numpy as np
 from pathlib import Path
 import pickle
 from sacred import Experiment
 from sacred.observers import FileStorageObserver
 import torch
 
-from core.acquisitions import get_eps_schedule
 from core.dists import get_dists_and_samples
 from core.objectives import get_objective
 from core.optimization import bo_loop
-from core.psq import get_control_sets_and_costs
+from core.psq import get_control_sets_and_costs, get_eps_schedule
 from core.regret import get_regret, plot_regret
 from core.utils import log, uniform_samples, load_most_recent_state
 
@@ -24,7 +24,7 @@ ex.observers.append(FileStorageObserver("./runs"))
 @ex.named_config
 def gpsample():
     obj_name = "gpsample"
-    acq_name = "ucb"
+    acq_name = "ucb-cs"
     dims = 3
     control_sets_id = 0
     costs_id = 0
@@ -102,15 +102,15 @@ def main(
     Path(figures_save_dir).mkdir(parents=True, exist_ok=True)
     Path(inter_save_dir).mkdir(parents=True, exist_ok=True)
     filename = (
-        f"{obj_name}_{dims}_{control_sets_id}_{costs_id}_"
-        f"{eps_schedule_id}_{budget}_{marginal_var}_{acq_name}_seed{seed}"
+        f"{obj_name}_{acq_name}_es{eps_schedule_id}_con{control_sets_id}_c{costs_id}"
+        f"_var{marginal_var}_C{budget}_seed{seed}"
     )
     filename = filename.replace(".", ",")
 
     # Objective function
     if obj_name is "gpsample":  # If sampling from GP, we need to define kernel first
         kernel = ScaleKernel(RBFKernel(ard_num_dims=dims))
-        kernel.outputscale = 1.
+        kernel.outputscale = 1.0
         kernel.base_kernel.lengthscale = init_lengthscale
     else:
         kernel = None
@@ -144,7 +144,7 @@ def main(
     if obj_name is not "gpsample":
         dims = bounds.shape[-1]
         kernel = ScaleKernel(RBFKernel(ard_num_dims=dims))
-        kernel.outputscale = 1.
+        kernel.outputscale = 1.0
         kernel.base_kernel.lengthscale = init_lengthscale
 
     likelihood = GaussianLikelihood()
@@ -157,10 +157,20 @@ def main(
     all_dists, all_dists_samples = get_dists_and_samples(
         dims=dims, variance=marginal_var
     )
-    eps_schedule = get_eps_schedule(id=eps_schedule_id)
+    variances = marginal_var * np.ones(dims, dtype=np.double)
+    lengthscales = init_lengthscale * np.ones(dims, dtype=np.double)
+    eps_schedule = get_eps_schedule(
+        id=eps_schedule_id,
+        costs=costs,
+        control_sets=control_sets,
+        random_sets=random_sets,
+        variances=variances,
+        lengthscales=lengthscales,
+        budget=budget,
+    )
 
     # Optimization loop
-    final_X, final_y, control_set_idxs, control_queries, T = bo_loop(
+    final_X, final_y, control_set_idxs, control_queries, T, all_eps = bo_loop(
         train_X=init_X,
         train_y=init_y,
         likelihood=likelihood,
@@ -250,5 +260,7 @@ def main(
     print(final_X)
     print("final y:")
     print(final_y)
+    print("all_eps:")
+    print(all_eps)
 
     log(f"Completed run {run_id} with parameters {args}")

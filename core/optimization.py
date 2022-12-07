@@ -28,6 +28,7 @@ def bo_loop(
 ):
     control_set_idxs = []
     control_queries = []
+    all_eps = []
     remaining_budget = budget
     t = start_iter
     while True:
@@ -47,9 +48,10 @@ def bo_loop(
             control_sets=control_sets,
             random_sets=random_sets,
             bounds=bounds,
-            eps=eps_schedule(t),
+            eps_schedule=eps_schedule,
             costs=costs,
         )
+
         # Exit condition
         cost = costs[control_set_idx]
         if cost > remaining_budget:
@@ -72,22 +74,26 @@ def bo_loop(
         control_set_idxs.append(control_set_idx)
         control_queries.append(control_query)
 
+        # Epsilon schedule management
+        eps_schedule.update(prev_control_idx=control_set_idx)
+        all_eps.append(eps_schedule.last_eps)
+
         # Loop management
         t += 1
         remaining_budget = remaining_budget - cost
 
         # Save state every 50 iterations
-        if t != 0 and t % 50 == 0:
-            pickle.dump(
-                (
-                    train_X,
-                    train_y,
-                    control_set_idxs,
-                    control_queries,
-                    t,
-                    remaining_budget,
-                ),
-                open(inter_save_dir + f"{filename}-iter{t}.p", "wb"),
-            )
+        # if t != 0 and t % 50 == 0:
+        #     pickle.dump(
+        #         (
+        #             train_X,
+        #             train_y,
+        #             control_set_idxs,
+        #             control_queries,
+        #             t,
+        #             remaining_budget,
+        #         ),
+        #         open(inter_save_dir + f"{filename}-iter{t}.p", "wb"),
+        #     )
 
-    return train_X, train_y, control_set_idxs, control_queries, t
+    return train_X, train_y, control_set_idxs, control_queries, t, all_eps

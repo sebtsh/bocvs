@@ -1,6 +1,110 @@
+from abc import ABC, abstractmethod
 import numpy as np
 
 from core.utils import powerset
+
+
+def get_eps_schedule(
+    id, costs, control_sets, random_sets, variances, lengthscales, budget
+):
+    if id == 0:
+        return AdaSchedule(
+            costs=costs,
+            control_sets=control_sets,
+            random_sets=random_sets,
+            variances=variances,
+            lengthscales=lengthscales,
+        )
+    if id == 1:
+        return LinearSchedule(start_eps=1.0, cutoff_iter=int(budget / costs[-1]))
+    #
+    else:
+        raise NotImplementedError
+
+
+class EpsilonSchedule(ABC):
+    def __init__(self):
+        super().__init__()
+        self.last_eps = None
+
+    @abstractmethod
+    def next(self, opt_vals):
+        pass
+
+
+class AdaSchedule(EpsilonSchedule):
+    def __init__(self, costs, control_sets, random_sets, variances, lengthscales):
+        """
+
+        :param costs: array of shape (m, ) of costs.
+        :param control_sets:list of arrays of variables in each control set.
+        :param random_sets: list of arrays of variables in each random set.
+        :param variances: array of variances of each variable.
+        :param lengthscales: array of lengthscales of each variable.
+        """
+        super().__init__()
+
+        m = len(random_sets)
+        self.m = m
+        assert len(random_sets[-1]) == 0  # implicit assumption that
+        # the last control set is the full control set
+        self.n_plays = np.zeros(m)
+        all_var_ls_ratios = variances / lengthscales
+
+        # Generate target no. of plays
+        target_plays = np.zeros(m)
+        for i in range(m - 1):
+            # Check condition 1
+            zero_plays = False
+            for j in range(m):
+                if j == i:
+                    continue
+                else:
+                    is_subset = len(np.setdiff1d(control_sets[i], control_sets[j])) == 0
+                    if is_subset and costs[i] >= costs[j]:
+                        zero_plays = True
+            if zero_plays:
+                continue
+            else:
+                var_ls_ratios = all_var_ls_ratios[random_sets[i]]
+                target_plays[i] = int((costs[-1] / costs[i]) * np.sum(var_ls_ratios))
+        self.target_plays = target_plays
+
+    def next(self, opt_vals):
+        eps = 0.0
+        for i in range(self.m - 1):
+            required_eps = opt_vals[-1] - opt_vals[i] + 1e-04
+            eps_valid = True
+            for j in range(i):
+                if opt_vals[j] + required_eps >= opt_vals[-1]:
+                    # then i would not be played with required_eps
+                    eps_valid = False
+                    break
+            if self.n_plays[i] < self.target_plays[i] and eps_valid:
+                eps = required_eps
+                break
+        self.last_eps = eps
+        return eps
+
+    def update(self, prev_control_idx):
+        if prev_control_idx is not None:
+            self.n_plays[prev_control_idx] += 1
+
+
+class LinearSchedule(EpsilonSchedule):
+    def __init__(self, start_eps, cutoff_iter):
+        super().__init__()
+        self.start_eps = start_eps
+        self.cutoff_iter = cutoff_iter
+        self.t = 0
+
+    def next(self, opt_vals):
+        eps = self.start_eps * np.maximum(1 - self.t / self.cutoff_iter, 0.0)
+        self.last_eps = eps
+        return eps
+
+    def update(self, prev_control_idx):
+        self.t += 1
 
 
 def get_control_sets(dims, control_id):
