@@ -8,7 +8,7 @@ from sacred import Experiment
 from sacred.observers import FileStorageObserver
 import torch
 
-from core.dists import get_dists_and_samples
+from core.dists import get_dists_and_samples, get_marginal_var
 from core.objectives import get_objective
 from core.optimization import bo_loop
 from core.psq import get_control_sets_and_costs, get_eps_schedule
@@ -30,7 +30,7 @@ def gpsample():
     costs_id = 0
     eps_schedule_id = 0
     budget = 100
-    marginal_var = 0.04
+    var_id = 0
     noise_std = 0.01
     init_lengthscale = 0.1
     n_init_points = 5
@@ -47,7 +47,7 @@ def hartmann():
     costs_id = 0
     eps_schedule_id = 0
     budget = 500
-    marginal_var = 0.04
+    var_id = 0
     noise_std = 0.01
     init_lengthscale = 0.2
     n_init_points = 5
@@ -64,7 +64,7 @@ def plant():
     costs_id = 0
     eps_schedule_id = 0
     budget = 500
-    marginal_var = 0.04
+    var_id = 0
     noise_std = 0.01
     init_lengthscale = 0.2
     n_init_points = 5
@@ -80,7 +80,7 @@ def main(
     control_sets_id,
     costs_id,
     eps_schedule_id,
-    marginal_var,
+    var_id,
     noise_std,
     init_lengthscale,
     n_init_points,
@@ -103,7 +103,7 @@ def main(
     Path(inter_save_dir).mkdir(parents=True, exist_ok=True)
     filename = (
         f"{obj_name}_{acq_name}_es{eps_schedule_id}_con{control_sets_id}_c{costs_id}"
-        f"_var{marginal_var}_C{budget}_seed{seed}"
+        f"_var{var_id}_C{budget}_seed{seed}"
     )
     filename = filename.replace(".", ",")
 
@@ -154,6 +154,7 @@ def main(
     control_sets, random_sets, costs = get_control_sets_and_costs(
         dims=dims, control_sets_id=control_sets_id, costs_id=costs_id
     )
+    marginal_var = get_marginal_var(var_id=var_id)
     all_dists, all_dists_samples = get_dists_and_samples(
         dims=dims, variance=marginal_var
     )

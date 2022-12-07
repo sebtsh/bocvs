@@ -6,6 +6,17 @@ import numpy as np
 from core.utils import expectation_det, maximize_fn, log
 
 
+def get_marginal_var(var_id):
+    if var_id == 0:
+        return 0.01
+    elif var_id == 1:
+        return 0.04
+    elif var_id == 2:
+        return 0.08
+    else:
+        raise NotImplementedError
+
+
 class Distribution(ABC):
     def __init__(self):
         super().__init__()
