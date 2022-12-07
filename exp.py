@@ -46,7 +46,7 @@ def hartmann():
     control_sets_id = 0
     costs_id = 0
     eps_schedule_id = 0
-    budget = 1000
+    budget = 500
     marginal_var = 0.04
     noise_std = 0.01
     init_lengthscale = 0.2
@@ -63,7 +63,7 @@ def plant():
     control_sets_id = 0
     costs_id = 0
     eps_schedule_id = 0
-    budget = 1000
+    budget = 500
     marginal_var = 0.04
     noise_std = 0.01
     init_lengthscale = 0.2
