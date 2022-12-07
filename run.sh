@@ -1,4 +1,5 @@
 # run with ./run.sh OBJ_NAME ACQ_NAME EPS_SCHEDULE_ID FIRST_CPU LAST_CPU
+# run with ./run.sh gpsample ucb-cs 0 0 31
 echo "obj_name: $1"
 echo "acq_name: $2"
 echo "epsilon_schedule: $3"

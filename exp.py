@@ -108,7 +108,7 @@ def main(
     filename = filename.replace(".", ",")
 
     # Objective function
-    if obj_name is "gpsample":  # If sampling from GP, we need to define kernel first
+    if obj_name == "gpsample":  # If sampling from GP, we need to define kernel first
         kernel = ScaleKernel(RBFKernel(ard_num_dims=dims))
         kernel.outputscale = 1.0
         kernel.base_kernel.lengthscale = init_lengthscale
@@ -141,7 +141,7 @@ def main(
         init_y = noisy_obj_func(init_X)
 
     # GP parameters
-    if obj_name is not "gpsample":
+    if obj_name != "gpsample":
         dims = bounds.shape[-1]
         kernel = ScaleKernel(RBFKernel(ard_num_dims=dims))
         kernel.outputscale = 1.0
