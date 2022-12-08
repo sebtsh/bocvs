@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import torch
 
 from core.utils import powerset
 
@@ -83,7 +84,8 @@ class AdaSchedule(EpsilonSchedule):
             if self.n_plays[i] < self.target_plays[i] and eps_valid:
                 eps = required_eps
                 break
-        eps = eps.item()
+        if isinstance(eps, torch.Tensor):
+            eps = eps.item()
         self.last_eps = eps
         return eps
 
