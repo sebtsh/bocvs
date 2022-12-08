@@ -120,7 +120,7 @@ def uniform_samples_1d(a, b, n_samples):
 
 
 def get_dists_and_samples(dims, variance):
-    n_samples = 2**13
+    n_samples = 2**12
 
     loc = 0.5
     a = 0.0
@@ -145,7 +145,7 @@ def get_opt_queries_and_vals(f, control_sets, random_sets, all_dists_samples, bo
     opt_vals = []
 
     for i in range(m):
-        log(f"Getting opt query and val for control set {i}")
+        # log(f"Getting opt query and val for control set {i}")
         control_set = control_sets[i]
 
         if len(control_set) == dims:

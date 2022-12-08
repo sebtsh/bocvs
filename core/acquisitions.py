@@ -236,8 +236,7 @@ class UCB_PSQ_CS(Acquisition):
             variance = posterior.variance
             return mean + self.beta * torch.sqrt(variance)
 
-        dims = bounds.shape[-1]
-
+        # dims = bounds.shape[-1]
         # skip_expectations = False
         # for i, control_set in enumerate(control_sets):
         #     if len(control_set) == dims and np.allclose(eps, 0):

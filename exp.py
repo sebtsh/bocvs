@@ -30,7 +30,7 @@ def gpsample():
     costs_id = 0
     eps_schedule_id = 0
     budget = 100
-    var_id = 0
+    var_id = 2
     noise_std = 0.01
     init_lengthscale = 0.1
     n_init_points = 5
@@ -122,6 +122,7 @@ def main(
         kernel=kernel,
         dims=dims,
     )
+    log(f"opt_val: {opt_val_det}")
 
     # Initialize state
     if load_state:
@@ -253,15 +254,17 @@ def main(
 
     print("cumu_regret:")
     print(cumu_regret)
-    print("control_set_idxs:")
-    print(control_set_idxs)
-    print("control_queries:")
-    print(control_queries)
-    print("final X:")
-    print(final_X)
+    # print("control_queries:")
+    # print(control_queries)
+    # print("final X:")
+    # print(final_X)
     print("final y:")
     print(final_y)
     print("all_eps:")
     print(all_eps)
+    print("control_set_idxs:")
+    print(control_set_idxs)
+    print("count of each control set played:")
+    print(np.hist(control_set_idxs, bins=np.arange(len(control_sets) + 1))[0])
 
     log(f"Completed run {run_id} with parameters {args}")

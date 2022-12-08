@@ -51,6 +51,7 @@ def bo_loop(
             eps_schedule=eps_schedule,
             costs=costs,
         )
+        log(f"Control set chosen: {control_set_idx}")
 
         # Exit condition
         cost = costs[control_set_idx]

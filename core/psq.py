@@ -16,7 +16,7 @@ def get_eps_schedule(
             lengthscales=lengthscales,
         )
     if id == 1:
-        return LinearSchedule(start_eps=1.0, cutoff_iter=int(budget / costs[-1]))
+        return LinearSchedule(start_eps=2.0, cutoff_iter=int(budget / costs[-1]))
     #
     else:
         raise NotImplementedError
@@ -83,6 +83,7 @@ class AdaSchedule(EpsilonSchedule):
             if self.n_plays[i] < self.target_plays[i] and eps_valid:
                 eps = required_eps
                 break
+        eps = eps.item()
         self.last_eps = eps
         return eps
 
