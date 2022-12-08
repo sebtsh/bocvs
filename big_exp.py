@@ -26,7 +26,6 @@ def gpsample():
     obj_name = "gpsample"
     acq_name = "ucb-cs"
     dims = 3
-    control_sets_id = 0
     eps_schedule_id = 0
     budget = 100
     noise_std = 0.01
@@ -41,7 +40,6 @@ def hartmann():
     obj_name = "hartmann"
     acq_name = "ucb"
     dims = 6
-    control_sets_id = 0
     eps_schedule_id = 0
     budget = 500
     noise_std = 0.01
@@ -56,7 +54,6 @@ def plant():
     obj_name = "plant"
     acq_name = "ucb"
     dims = 5
-    control_sets_id = 0
     eps_schedule_id = 0
     budget = 500
     noise_std = 0.01
@@ -71,7 +68,6 @@ def main(
     obj_name,
     acq_name,
     dims,
-    control_sets_id,
     eps_schedule_id,
     budget,
     noise_std,
@@ -161,7 +157,7 @@ def main(
 
             # Control/random sets and costs
             control_sets, random_sets, costs = get_control_sets_and_costs(
-                dims=dims, control_sets_id=control_sets_id, costs_id=costs_id
+                dims=dims, control_sets_id=0, costs_id=costs_id
             )
             marginal_var = get_marginal_var(var_id=var_id)
             all_dists, all_dists_samples = get_dists_and_samples(
