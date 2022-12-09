@@ -120,7 +120,7 @@ def uniform_samples_1d(a, b, n_samples):
 
 
 def get_dists_and_samples(dims, variance):
-    n_samples = 2**11
+    n_samples = 2**10
 
     loc = 0.5
     a = 0.0

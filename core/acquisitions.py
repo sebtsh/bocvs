@@ -106,7 +106,7 @@ class TS_PSQ(Acquisition):
                 random_sets=random_sets,
                 all_dists_samples=all_dists_samples,
                 bounds=bounds,
-                max_mode="DIRECT",
+                max_mode="L-BFGS-B",
             )
 
             ret_control_idx = torch.argmax(opt_vals).item()
@@ -165,7 +165,7 @@ class TS_PSQ_Naive(Acquisition):
             random_sets=random_sets,
             all_dists_samples=all_dists_samples,
             bounds=bounds,
-            max_mode="DIRECT",
+            max_mode="L-BFGS-B",
         )
 
         ret_control_idx = torch.argmax(opt_vals / costs).item()
@@ -220,7 +220,7 @@ class UCB_PSQ(Acquisition):
                 random_sets=random_sets,
                 all_dists_samples=all_dists_samples,
                 bounds=bounds,
-                max_mode="DIRECT",
+                max_mode="L-BFGS-B",
             )
             ret_control_idx = torch.argmax(opt_vals).item()
             ret_query = opt_queries[ret_control_idx]
@@ -285,7 +285,7 @@ class UCB_PSQ_CS(Acquisition):
             random_sets=random_sets,
             all_dists_samples=all_dists_samples,
             bounds=bounds,
-            max_mode="DIRECT",
+            max_mode="L-BFGS-B",
         )
 
         eps = eps_schedule.next(opt_vals=opt_vals)
@@ -330,7 +330,7 @@ class UCB_PSQ_Naive(Acquisition):
             random_sets=random_sets,
             all_dists_samples=all_dists_samples,
             bounds=bounds,
-            max_mode="DIRECT",
+            max_mode="L-BFGS-B",
         )
         ret_control_idx = torch.argmax(opt_vals / costs).item()
         ret_query = opt_queries[ret_control_idx]
