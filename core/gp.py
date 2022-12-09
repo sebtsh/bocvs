@@ -9,7 +9,6 @@ def sample_gp_prior(kernel, bounds, num_points, jitter=1e-06):
     :param kernel: a GPyTorch kernel.
     :param bounds: array of shape (2, num_dims).
     :param num_points: int.
-    :param rng: NumPy rng object.
     :param jitter: float.
     :return: Callable that takes in an array of shape (n, N) and returns an array of shape (n, 1).
     """

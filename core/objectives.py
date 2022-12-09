@@ -9,11 +9,9 @@ from core.utils import maximize_fn, log
 def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
     """
     Get objective function, bounds and its max function value (for regret).
-    :param config_name: str.
     :param objective_name: str.
     :param noise_std: float.
     :param is_input_transform: bool. Set to True to transform the domain to the unit hypercube.
-    :param dtype: Torch dtype.
     :return: objective function Callable that takes in arrays of shape (..., d) and returns an array of shape (..., 1),
     bounds with shape (2, d), optimal function value.
     """
@@ -22,7 +20,12 @@ def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
 
         obj_func = sample_gp_prior(kernel=kernel, bounds=bounds, num_points=1000)
 
-        _, opt_val = maximize_fn(f=obj_func, bounds=bounds, n_warmup=10000,)
+        _, opt_val = maximize_fn(
+            f=obj_func,
+            bounds=bounds,
+            mode="L-BFGS-B",
+            n_warmup=10000,
+        )
 
     elif objective_name == "hartmann":
         neg_obj = test_functions.Hartmann(dim=6, negate=True)

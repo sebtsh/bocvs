@@ -24,6 +24,7 @@ def get_regret(
         random_sets=random_sets,
         all_dists_samples=all_dists_samples,
         bounds=bounds,
+        max_mode="L-BFGS-B",
     )
     max_val = torch.max(opt_vals)
     iter_vals = []

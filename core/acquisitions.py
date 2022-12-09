@@ -90,7 +90,12 @@ class TS_PSQ(Acquisition):
             if len(control_set) == dims:
                 skip_expectations = True
                 ret_control_idx = i
-                ret_query, _ = maximize_fn(f=f_sample, bounds=bounds, mode="DIRECT", n_warmup=10000,)
+                ret_query, _ = maximize_fn(
+                    f=f_sample,
+                    bounds=bounds,
+                    mode="L-BFGS-B",
+                    n_warmup=10000,
+                )
                 ret_query = ret_query[None, :]
                 break
 
@@ -101,6 +106,7 @@ class TS_PSQ(Acquisition):
                 random_sets=random_sets,
                 all_dists_samples=all_dists_samples,
                 bounds=bounds,
+                max_mode="DIRECT",
             )
 
             ret_control_idx = torch.argmax(opt_vals).item()
@@ -159,6 +165,7 @@ class TS_PSQ_Naive(Acquisition):
             random_sets=random_sets,
             all_dists_samples=all_dists_samples,
             bounds=bounds,
+            max_mode="DIRECT",
         )
 
         ret_control_idx = torch.argmax(opt_vals / costs).item()
@@ -197,7 +204,12 @@ class UCB_PSQ(Acquisition):
             if len(control_set) == dims:
                 skip_expectations = True
                 ret_control_idx = i
-                ret_query, _ = maximize_fn(f=ucb, n_warmup=10000, bounds=bounds)
+                ret_query, _ = maximize_fn(
+                    f=ucb,
+                    bounds=bounds,
+                    mode="L-BFGS-B",
+                    n_warmup=10000,
+                )
                 ret_query = ret_query[None, :]
                 break
 
@@ -208,6 +220,7 @@ class UCB_PSQ(Acquisition):
                 random_sets=random_sets,
                 all_dists_samples=all_dists_samples,
                 bounds=bounds,
+                max_mode="DIRECT",
             )
             ret_control_idx = torch.argmax(opt_vals).item()
             ret_query = opt_queries[ret_control_idx]
@@ -266,11 +279,6 @@ class UCB_PSQ_CS(Acquisition):
         #
         # return ret_control_idx, ret_query
 
-        #TODO: TESTING CODE FIX LATER
-
-        log("starting DIRECT")
-        wall_start = time()
-        proc_start = process_time()
         opt_queries, opt_vals = get_opt_queries_and_vals(
             f=ucb,
             control_sets=control_sets,
@@ -279,32 +287,6 @@ class UCB_PSQ_CS(Acquisition):
             bounds=bounds,
             max_mode="DIRECT",
         )
-        proc_end = process_time()
-        wall_end = time()
-        log(f"DIRECT opt_queries: {opt_queries}")
-        log(f"DIRECT opt_vals: {opt_vals}")
-        log(f"DIRECT process time: {proc_end - proc_start}")
-        log(f"DIRECT wall clock time: {wall_end - wall_start}")
-
-        log("starting L-BFGS-B")
-        wall_start = time()
-        proc_start = process_time()
-        opt_queries, opt_vals = get_opt_queries_and_vals(
-            f=ucb,
-            control_sets=control_sets,
-            random_sets=random_sets,
-            all_dists_samples=all_dists_samples,
-            bounds=bounds,
-            max_mode="L-BFGS-B",
-        )
-        proc_end = process_time()
-        wall_end = time()
-        log(f"L-BFGS-B opt_queries: {opt_queries}")
-        log(f"L-BFGS-B opt_vals: {opt_vals}")
-        log(f"L-BFGS-B process time: {proc_end - proc_start}")
-        log(f"L-BFGS-B wall clock time: {wall_end - wall_start}")
-
-        #TODO: END TESTING CODE
 
         eps = eps_schedule.next(opt_vals=opt_vals)
 
@@ -348,6 +330,7 @@ class UCB_PSQ_Naive(Acquisition):
             random_sets=random_sets,
             all_dists_samples=all_dists_samples,
             bounds=bounds,
+            max_mode="DIRECT",
         )
         ret_control_idx = torch.argmax(opt_vals / costs).item()
         ret_query = opt_queries[ret_control_idx]
