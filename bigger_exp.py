@@ -19,7 +19,7 @@ matplotlib.use("Agg")
 
 obj_name = sys.argv[1]
 acq_name = sys.argv[2]
-eps_schedule_id = sys.argv[3]
+eps_schedule_id = int(sys.argv[3])
 
 print("Getting configs")
 
