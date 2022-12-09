@@ -4,7 +4,6 @@ from itertools import combinations
 import numpy as np
 import pickle
 from scipy.optimize import minimize
-from scipydirect import minimize as direct_minimize
 import torch
 
 
@@ -60,7 +59,7 @@ def load_most_recent_state(inter_save_dir, filename):
     return train_X, train_y, state_dict, max_iter
 
 
-def maximize_fn(f, bounds, mode="L-BFGS-B", n_warmup=100, n_iter=5, n_iter_direct=20):
+def maximize_fn(f, bounds, mode="L-BFGS-B", n_warmup=100, n_iter=5):
     """
     Approximately maximizes a function f using sampling + L-BFGS-B method adapted from
     https://github.com/fmfn/BayesianOptimization.
@@ -100,14 +99,14 @@ def maximize_fn(f, bounds, mode="L-BFGS-B", n_warmup=100, n_iter=5, n_iter_direc
             if -res.fun >= f_max:
                 x_max = res.x
                 f_max = -res.fun
-    elif mode == "DIRECT":
-        res = direct_minimize(
-            func=neg_func_squeezed, bounds=bounds.T, algmethod=1, maxT=n_iter_direct
-        )
-        if not res.success:
-            raise Exception("DIRECT failed in maximize_fn")
-        x_max = res.x
-        f_max = -res.fun
+    # elif mode == "DIRECT":
+    #     res = direct_minimize(
+    #         func=neg_func_squeezed, bounds=bounds.T, algmethod=1, maxT=n_iter_direct
+    #     )
+    #     if not res.success:
+    #         raise Exception("DIRECT failed in maximize_fn")
+    #     x_max = res.x
+    #     f_max = -res.fun
     else:
         raise NotImplementedError
 
