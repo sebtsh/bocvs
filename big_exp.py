@@ -263,7 +263,7 @@ def main(
             # print("final X:")
             # print(final_X)
             print("final y:")
-            print(final_y)
+            print(torch.squeeze(final_y))
             print("all_eps:")
             print(all_eps)
             print("control_set_idxs:")
