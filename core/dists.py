@@ -137,7 +137,7 @@ def get_dists_and_samples(dims, variance):
     return all_dists, all_dists_samples
 
 
-def get_opt_queries_and_vals(f, control_sets, random_sets, all_dists_samples, bounds):
+def get_opt_queries_and_vals(f, control_sets, random_sets, all_dists_samples, bounds, max_mode):
     m = len(control_sets)
     dims = bounds.shape[-1]
 
@@ -145,12 +145,12 @@ def get_opt_queries_and_vals(f, control_sets, random_sets, all_dists_samples, bo
     opt_vals = []
 
     for i in range(m):
-        # log(f"Getting opt query and val for control set {i}")
+        log(f"Getting opt query and val for control set {i}")
         control_set = control_sets[i]
 
         if len(control_set) == dims:
             # if full control set, avoid expectation calculations
-            opt_query, opt_val = maximize_fn(f=f, n_warmup=10000, bounds=bounds)
+            opt_query, opt_val = maximize_fn(f=f, bounds=bounds, mode=max_mode, n_warmup=10000,)
         else:
             random_set = random_sets[i]
             random_dists_samples = all_dists_samples[:, random_set]  # (n_samples, d_r)
@@ -168,6 +168,7 @@ def get_opt_queries_and_vals(f, control_sets, random_sets, all_dists_samples, bo
                     order_idxs=order_idxs,
                 ),
                 bounds=bounds[:, control_set],
+                mode=max_mode,
             )
 
         opt_queries.append(opt_query[None, :])

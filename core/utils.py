@@ -4,6 +4,7 @@ from itertools import combinations
 import numpy as np
 import pickle
 from scipy.optimize import minimize
+from scipydirect import minimize as direct_minimize
 import torch
 
 
@@ -59,7 +60,7 @@ def load_most_recent_state(inter_save_dir, filename):
     return train_X, train_y, state_dict, max_iter
 
 
-def maximize_fn(f, bounds, n_warmup=100, n_iter=5):
+def maximize_fn(f, bounds, mode, n_warmup=100, n_iter=5, n_iter_direct=100):
     """
     Approximately maximizes a function f using sampling + L-BFGS-B method adapted from
     https://github.com/fmfn/BayesianOptimization.
@@ -67,36 +68,48 @@ def maximize_fn(f, bounds, n_warmup=100, n_iter=5):
     :param bounds: Array of shape (2, d). Lower and upper bounds of each variable.
     :param n_warmup: int. Number of random samples.
     :param n_iter: int. Number of L-BFGS-B starting points.
+    :param n_iter_direct:
     :return: (Array of shape (d,), max_val).
     """
     neg_func_squeezed = lambda x: np.squeeze(
         -f(torch.tensor(x[None, :])).cpu().detach().numpy()
     )
 
-    # log("Starting random sampling")
-    # Random sampling
-    x_tries = uniform_samples(bounds=bounds, n_samples=n_warmup)
-    f_x = torch.squeeze(f(x_tries), dim=1).cpu().detach().numpy()
-    x_max = x_tries[np.argmax(f_x)]
-    f_max = np.max(f_x)
+    if mode == "L-BFGS-B":
+        # log("Starting random sampling")
+        # Random sampling
+        x_tries = uniform_samples(bounds=bounds, n_samples=n_warmup)
+        f_x = torch.squeeze(f(x_tries), dim=1).cpu().detach().numpy()
+        x_max = x_tries[np.argmax(f_x)]
+        f_max = np.max(f_x)
 
-    # log("Starting L-BFGS-B")
-    # L-BFGS-B
-    x_seeds = uniform_samples(bounds=bounds, n_samples=n_iter - 1)
-    x_seeds = torch.cat([x_seeds, x_max[None, :]], dim=0)
-    x_seeds_np = x_seeds.cpu().detach().numpy()
-    for x_try in x_seeds_np:
-        res = minimize(
-            fun=neg_func_squeezed,
-            x0=x_try,
-            bounds=bounds.T,
-            method="L-BFGS-B",
+        # log("Starting L-BFGS-B")
+        # L-BFGS-B
+        x_seeds = uniform_samples(bounds=bounds, n_samples=n_iter - 1)
+        x_seeds = torch.cat([x_seeds, x_max[None, :]], dim=0)
+        x_seeds_np = x_seeds.cpu().detach().numpy()
+        for x_try in x_seeds_np:
+            res = minimize(
+                fun=neg_func_squeezed,
+                x0=x_try,
+                bounds=bounds.T,
+                method="L-BFGS-B",
+            )
+            if not res.success:
+                continue
+            if -res.fun >= f_max:
+                x_max = res.x
+                f_max = -res.fun
+    elif mode == "DIRECT":
+        res = direct_minimize(
+            func=neg_func_squeezed, bounds=bounds.T, algmethod=1, maxT=n_iter_direct
         )
         if not res.success:
-            continue
-        if -res.fun >= f_max:
-            x_max = res.x
-            f_max = -res.fun
+            raise Exception("DIRECT failed in maximize_fn")
+        x_max = res.x
+        f_max = -res.fun
+    else:
+        raise NotImplementedError
 
     f_argmax = np.clip(x_max, bounds[0], bounds[1])
     return torch.tensor(f_argmax), f_max
