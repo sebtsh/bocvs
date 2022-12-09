@@ -153,7 +153,7 @@ def get_opt_queries_and_vals(
         if len(control_set) == dims:
             # if full control set, avoid expectation calculations
             opt_query, opt_val = maximize_fn(
-                f=f, bounds=bounds, mode=max_mode, n_warmup=10000, n_iter_direct=100
+                f=f, bounds=bounds, mode=max_mode, n_warmup=10000
             )
         else:
             random_set = random_sets[i]
