@@ -22,7 +22,7 @@ def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
 
         obj_func = sample_gp_prior(kernel=kernel, bounds=bounds, num_points=1000)
 
-        _, opt_val = maximize_fn(f=obj_func, n_warmup=10000, bounds=bounds)
+        _, opt_val = maximize_fn(f=obj_func, bounds=bounds, n_warmup=10000,)
 
     elif objective_name == "hartmann":
         neg_obj = test_functions.Hartmann(dim=6, negate=True)

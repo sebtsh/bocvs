@@ -60,7 +60,7 @@ def load_most_recent_state(inter_save_dir, filename):
     return train_X, train_y, state_dict, max_iter
 
 
-def maximize_fn(f, bounds, mode, n_warmup=100, n_iter=5, n_iter_direct=100):
+def maximize_fn(f, bounds, mode="L-BFGS-B", n_warmup=100, n_iter=5, n_iter_direct=100):
     """
     Approximately maximizes a function f using sampling + L-BFGS-B method adapted from
     https://github.com/fmfn/BayesianOptimization.
