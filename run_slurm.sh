@@ -3,13 +3,7 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=sebastian.tay@u.nus.edu
 #SBATCH --partition=long
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=16
 #SBATCH --time=4320
 
-echo "obj_name: $1"
-echo "acq_name: $2"
-echo "eps_schedule_id: $3"
-
-CUDA_VISIBLE_DEVICES=-1 srun python bigger_exp.py "$1" "$2" "$3"
-
-# run with sbatch run_slurm.sh CONFIG_NAME OBJ_NAME SEED
+srun ./slurm_inner.sh "$1" "$2" "$3"
