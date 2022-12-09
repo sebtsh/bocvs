@@ -4,8 +4,7 @@ import matplotlib
 import numpy as np
 from pathlib import Path
 import pickle
-from sacred import Experiment
-from sacred.observers import FileStorageObserver
+import sys
 import torch
 
 from core.dists import get_dists_and_samples, get_marginal_var
@@ -17,50 +16,38 @@ from core.utils import log, uniform_samples, load_most_recent_state
 
 
 matplotlib.use("Agg")
-ex = Experiment("CS-PSQ-BO")
-ex.observers.append(FileStorageObserver("./runs"))
 
+obj_name = sys.argv[1]
+acq_name = sys.argv[2]
+eps_schedule_id = sys.argv[3]
 
-@ex.named_config
-def gpsample():
-    obj_name = "gpsample"
-    acq_name = "ucb-cs"
+print("Getting configs")
+
+if obj_name == "gpsample":
     dims = 3
-    eps_schedule_id = 0
     budget = 100
     noise_std = 0.01
     init_lengthscale = 0.1
     n_init_points = 5
     load_state = False
-
-
-@ex.named_config
-def hartmann():
-    obj_name = "hartmann"
-    acq_name = "ucb"
+elif obj_name == "hartmann":
     dims = 6
-    eps_schedule_id = 0
     budget = 500
     noise_std = 0.01
     init_lengthscale = 0.2
     n_init_points = 5
     load_state = False
-
-
-@ex.named_config
-def plant():
-    obj_name = "plant"
-    acq_name = "ucb"
+elif obj_name == "plant":
     dims = 5
-    eps_schedule_id = 0
     budget = 500
     noise_std = 0.01
     init_lengthscale = 0.2
     n_init_points = 5
     load_state = False
+else:
+    raise NotImplementedError
 
 
-@ex.automain
 def main(
     obj_name,
     acq_name,
@@ -72,9 +59,9 @@ def main(
     n_init_points,
     load_state,
 ):
+    print("Reached here")
     args = dict(locals().items())
     log(f"Running with parameters {args}")
-    run_id = ex.current_run._id
 
     for seed in range(5):
         if acq_name == "ucb-cs":
@@ -279,4 +266,17 @@ def main(
                     )[0]
                 )
 
-        log(f"Completed run {run_id} with parameters {args}")
+        log(f"Completed run with parameters {args}")
+
+
+main(
+    obj_name=obj_name,
+    acq_name=acq_name,
+    dims=dims,
+    eps_schedule_id=eps_schedule_id,
+    budget=budget,
+    noise_std=noise_std,
+    init_lengthscale=init_lengthscale,
+    n_init_points=n_init_points,
+    load_state=load_state,
+)
