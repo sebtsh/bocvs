@@ -7,6 +7,27 @@ from core.dists import get_opt_queries_and_vals
 from core.utils import expectation_det
 
 
+def interpolate_regret(regrets, all_cost_per_iter_cumusums):
+    cost_axis = np.sort(np.concatenate(all_cost_per_iter_cumusums))
+    cost_axis = np.unique(cost_axis)  # remove duplicates
+    new_regrets = np.zeros((len(regrets), len(cost_axis)))
+    for i, regret in enumerate(regrets):
+        cost_cumusum = all_cost_per_iter_cumusums[i]
+        assert len(cost_cumusum) == len(regret)
+        for j, cost in enumerate(cost_axis):
+            where = np.where(cost_cumusum == cost)[0]
+            if len(where) != 0:
+                assert len(where) == 1
+                new_regrets[i, j] = regret[where[0]]
+            else:
+                if j != 0:
+                    new_regrets[i, j] = new_regrets[i, j-1]
+                else:
+                    new_regrets[i, j] = regret[0]
+
+    return new_regrets, cost_axis
+
+
 def get_regret(
     control_set_idxs,
     control_queries,
