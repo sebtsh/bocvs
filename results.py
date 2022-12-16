@@ -131,16 +131,18 @@ def main(
                 )
 
                 mean_simple_regrets = np.mean(interpolated_all_simple_regrets, axis=0)
-                std_err_simple_regrets = np.std(interpolated_all_simple_regrets, axis=0) / np.sqrt(
-                    num_seeds
-                )
+                std_err_simple_regrets = np.std(
+                    interpolated_all_simple_regrets, axis=0
+                ) / np.sqrt(num_seeds)
                 mean_cumu_regrets = np.mean(interpolated_all_cumu_regrets, axis=0)
-                std_err_cumu_regrets = np.std(interpolated_all_cumu_regrets, axis=0) / np.sqrt(
-                    num_seeds
-                )
+                std_err_cumu_regrets = np.std(
+                    interpolated_all_cumu_regrets, axis=0
+                ) / np.sqrt(num_seeds)
                 acq_name = acq_name_dict[acquisition]
 
-                axs_simple.plot(cost_axis, mean_simple_regrets, label=acq_name, color=color)
+                axs_simple.plot(
+                    cost_axis, mean_simple_regrets, label=acq_name, color=color
+                )
                 axs_simple.fill_between(
                     cost_axis,
                     mean_simple_regrets - std_err_simple_regrets,
@@ -158,13 +160,17 @@ def main(
                     color=color,
                 )
 
-                axs_simple.set_title(f"costs: {costs_alias}, variance: {variance}", size=text_size)
+                axs_simple.set_title(
+                    f"costs: {costs_alias}, variance: {variance}", size=text_size
+                )
                 axs_simple.set_xlabel("Budget $C$", size=text_size)
                 axs_simple.set_ylabel("Simple regret", size=text_size)
                 axs_simple.tick_params(labelsize=tick_size)
                 axs_simple.legend(fontsize=text_size - 2, loc=legend_loc)
 
-                axs_cumu.set_title(f"costs: {costs_alias}, variance: {variance}", size=text_size)
+                axs_cumu.set_title(
+                    f"costs: {costs_alias}, variance: {variance}", size=text_size
+                )
                 axs_cumu.set_xlabel("Budget $C$", size=text_size)
                 axs_cumu.set_ylabel("Cumulative regret", size=text_size)
                 axs_cumu.tick_params(labelsize=tick_size)

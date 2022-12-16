@@ -21,7 +21,7 @@ def interpolate_regret(regrets, all_cost_per_iter_cumusums):
                 new_regrets[i, j] = regret[where[0]]
             else:
                 if j != 0:
-                    new_regrets[i, j] = new_regrets[i, j-1]
+                    new_regrets[i, j] = new_regrets[i, j - 1]
                 else:
                     new_regrets[i, j] = regret[0]
 

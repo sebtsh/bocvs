@@ -59,7 +59,6 @@ def main(
     n_init_points,
     load_state,
 ):
-    print("Reached here")
     args = dict(locals().items())
     log(f"Running with parameters {args}")
 

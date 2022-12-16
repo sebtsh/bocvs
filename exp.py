@@ -44,7 +44,7 @@ def hartmann():
     acq_name = "ucb"
     dims = 6
     control_sets_id = 0
-    costs_id = 0
+    costs_id = 2
     eps_schedule_id = 0
     budget = 500
     var_id = 0
