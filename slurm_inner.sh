@@ -1,3 +1,4 @@
+#!/bin/sh
 echo "job_id: $1"
 
 ulimit -u 100000

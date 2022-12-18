@@ -28,9 +28,9 @@ def gpsample():
     dims = 3
     control_sets_id = 0
     costs_id = 0
-    eps_schedule_id = 0
-    budget = 100
-    var_id = 2
+    eps_schedule_id = 2
+    budget = 50
+    var_id = 0
     noise_std = 0.01
     init_lengthscale = 0.1
     n_init_points = 5
@@ -46,7 +46,7 @@ def hartmann():
     control_sets_id = 0
     costs_id = 2
     eps_schedule_id = 0
-    budget = 500
+    budget = 200
     var_id = 0
     noise_std = 0.01
     init_lengthscale = 0.2

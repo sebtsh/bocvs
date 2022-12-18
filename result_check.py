@@ -2,19 +2,23 @@ import os.path
 from pathlib import Path
 import shutil
 
-# objs = ["gpsample", "hartmann", "plant"]
+create_jobs = True
 num_workers = 8
 objs = ["gpsample", "hartmann"]
-acquisitions = ["ucb-cs_es0", "ucb-cs_es1", "ucb", "ts"]
+acquisitions = ["ucb-cs_es2", "ucb-cs_es3", "ucb-cs_es4", "ucb-cs_es5"]
 
 missing_filenames = []
 
 
 for obj_name in objs:
     if obj_name == "gpsample":
-        budget = 100
-    else:
+        budget = 50
+    elif obj_name == "hartmann":
+        budget = 200
+    elif obj_name == "plant":
         budget = 500
+    else:
+        raise NotImplementedError
 
     base_dir = "results/" + obj_name + "/"
     save_dir = base_dir
@@ -47,13 +51,13 @@ for obj_name in objs:
                         missing_filenames.append(filename)
                         print(f"{filename} is missing")
 
-# Create job files
-job_dir = "jobs/"
-if os.path.exists(job_dir):  # empty the job_dir directory
-    shutil.rmtree(job_dir)
-Path(job_dir).mkdir(parents=True, exist_ok=True)
+if create_jobs:
+    # Create job files
+    job_dir = "jobs/"
+    if os.path.exists(job_dir):  # empty the job_dir directory
+        shutil.rmtree(job_dir)
+    Path(job_dir).mkdir(parents=True, exist_ok=True)
 
-
-for i, f in enumerate(missing_filenames):
-    with open(job_dir + f"job{i % num_workers}.txt", "a") as file:
-        file.write(f"{f}\n")
+    for i, f in enumerate(missing_filenames):
+        with open(job_dir + f"job{i % num_workers}.txt", "a") as file:
+            file.write(f"{f}\n")

@@ -167,6 +167,7 @@ def main(
                 axs_simple.set_ylabel("Simple regret", size=text_size)
                 axs_simple.tick_params(labelsize=tick_size)
                 axs_simple.legend(fontsize=text_size - 2, loc=legend_loc)
+                axs_simple.set_yscale("log")
 
                 axs_cumu.set_title(
                     f"costs: {costs_alias}, variance: {variance}", size=text_size

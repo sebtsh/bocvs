@@ -18,7 +18,28 @@ def get_eps_schedule(
         )
     if id == 1:
         return LinearSchedule(start_eps=2.0, cutoff_iter=int(budget / costs[-1]))
-    #
+    if id == 2:
+        return LinearSchedule(start_eps=2.0, cutoff_iter=200)
+    if id == 3:
+        return LinearSchedule(start_eps=2.0, cutoff_iter=400)
+    if id == 4:
+        return AdaLinSchedule(
+            start_eps=2.0,
+            cutoff_mult=1.0,
+            var_aware=False,
+            costs=costs,
+            random_sets=random_sets,
+            variances=variances,
+        )
+    if id == 5:
+        return AdaLinSchedule(
+            start_eps=2.0,
+            cutoff_mult=1.0,
+            var_aware=True,
+            costs=costs,
+            random_sets=random_sets,
+            variances=variances,
+        )
     else:
         raise NotImplementedError
 
@@ -31,6 +52,36 @@ class EpsilonSchedule(ABC):
     @abstractmethod
     def next(self, opt_vals):
         pass
+
+
+class AdaLinSchedule(EpsilonSchedule):
+    def __init__(
+        self, start_eps, cutoff_mult, var_aware, costs, random_sets, variances
+    ):
+        super().__init__()
+        self.start_eps = start_eps
+
+        # construct sum of variances
+        m = len(random_sets)
+        sum_of_variances = np.zeros(m - 1)
+        for i in range(m - 1):
+            sum_of_variances[i] = np.sum(variances[random_sets[i]] / (1 / 12))
+
+        if var_aware:
+            cutoff_iter = np.sum(costs[-1] / costs[:-1] * sum_of_variances)
+        else:
+            cutoff_iter = np.sum(costs[-1] / costs[:-1])
+
+        self.cutoff_iter = int(cutoff_mult * cutoff_iter)
+        self.t = 0
+
+    def next(self, opt_vals):
+        eps = self.start_eps * np.maximum(1 - self.t / self.cutoff_iter, 0.0)
+        self.last_eps = eps
+        return eps
+
+    def update(self, prev_control_idx):
+        self.t += 1
 
 
 class AdaSchedule(EpsilonSchedule):
