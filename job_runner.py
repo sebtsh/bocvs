@@ -54,6 +54,7 @@ def main(
     var_id,
     budget,
     seed,
+    control_sets_id,
     dims,
     noise_std,
     init_lengthscale,
@@ -132,7 +133,7 @@ def main(
 
     # Control/random sets and costs
     control_sets, random_sets, costs = get_control_sets_and_costs(
-        dims=dims, control_sets_id=0, costs_id=costs_id
+        dims=dims, control_sets_id=control_sets_id, costs_id=costs_id
     )
     marginal_var = get_marginal_var(var_id=var_id)
     all_dists, all_dists_samples = get_dists_and_samples(
@@ -255,18 +256,28 @@ for params in all_params:  # run each experiment sequentially
     print("Getting configs")
 
     if obj_name == "gpsample":
+        control_sets_id = 0
         dims = 3
         noise_std = 0.01
         init_lengthscale = 0.1
         n_init_points = 5
         load_state = False
     elif obj_name == "hartmann":
+        control_sets_id = 0
         dims = 6
         noise_std = 0.01
         init_lengthscale = 0.2
         n_init_points = 5
         load_state = False
     elif obj_name == "plant":
+        control_sets_id = 0
+        dims = 5
+        noise_std = 0.01
+        init_lengthscale = 0.2
+        n_init_points = 5
+        load_state = False
+    elif obj_name == "airfoil":
+        control_sets_id = 1
         dims = 5
         noise_std = 0.01
         init_lengthscale = 0.2
@@ -283,6 +294,7 @@ for params in all_params:  # run each experiment sequentially
         var_id=var_id,
         budget=budget,
         seed=seed,
+        control_sets_id=control_sets_id,
         dims=dims,
         noise_std=noise_std,
         init_lengthscale=init_lengthscale,

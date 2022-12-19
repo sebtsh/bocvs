@@ -1,5 +1,7 @@
 from botorch import test_functions
+from botorch.models import SingleTaskGP
 from marchantia.core.synth_func import create_synth_funcs_combined
+import pickle
 import torch
 
 from core.gp import sample_gp_prior
@@ -15,6 +17,7 @@ def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
     :return: objective function Callable that takes in arrays of shape (..., d) and returns an array of shape (..., 1),
     bounds with shape (2, d), optimal function value.
     """
+    data_dir = "data/"
     if objective_name == "gpsample":
         bounds = torch.stack([torch.zeros(dims), torch.ones(dims)])
 
@@ -40,7 +43,6 @@ def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
             obj_func = unsqueezed_obj
 
         opt_val = neg_obj.optimal_value
-
     elif objective_name == "plant":
         bounds = torch.tensor(
             [[0, 7.7], [0, 3.5], [0, 10.4], [8.9, 11.3], [2.5, 6.5]], dtype=torch.double
@@ -56,6 +58,23 @@ def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
             )
 
         _, opt_val = maximize_fn(f=obj_func, n_warmup=10000, bounds=bounds)
+    elif objective_name == "airfoil":
+        bounds = torch.stack([torch.zeros(dims), torch.ones(dims)])
+
+        X, y, state_dict = pickle.load(
+            open(data_dir + "airfoil/airfoil_X_Y_statedict.p", "rb")
+        )
+        model = SingleTaskGP(train_X=X, train_Y=y)
+        model.load_state_dict(state_dict)
+
+        obj_func = lambda x: model.posterior(x).mean
+
+        _, opt_val = maximize_fn(
+            f=obj_func,
+            bounds=bounds,
+            mode="L-BFGS-B",
+            n_warmup=10000,
+        )
     else:
         raise Exception("Incorrect obj_name passed to get_objective")
 

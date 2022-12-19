@@ -3,8 +3,9 @@ from pathlib import Path
 import shutil
 
 create_jobs = True
-num_workers = 8
-objs = ["gpsample", "hartmann"]
+num_workers = 2
+# objs = ["gpsample", "hartmann", "plant"]
+objs = ["plant"]
 acquisitions = ["ucb-cs_es2", "ucb-cs_es3", "ucb-cs_es4", "ucb-cs_es5"]
 
 missing_filenames = []

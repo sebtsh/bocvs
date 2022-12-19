@@ -72,6 +72,23 @@ def plant():
     load_state = False
 
 
+@ex.named_config
+def airfoil():
+    obj_name = "airfoil"
+    acq_name = "ucb"
+    dims = 5
+    control_sets_id = 1
+    costs_id = 0
+    eps_schedule_id = 0
+    budget = 500
+    var_id = 0
+    noise_std = 0.01
+    init_lengthscale = 0.2
+    n_init_points = 5
+    seed = 0
+    load_state = False
+
+
 @ex.automain
 def main(
     obj_name,
@@ -102,7 +119,7 @@ def main(
     Path(figures_save_dir).mkdir(parents=True, exist_ok=True)
     Path(inter_save_dir).mkdir(parents=True, exist_ok=True)
     filename = (
-        f"{obj_name}_{acq_name}_es{eps_schedule_id}_con{control_sets_id}_c{costs_id}"
+        f"{obj_name}_{acq_name}_es{eps_schedule_id}_c{costs_id}"
         f"_var{var_id}_C{budget}_seed{seed}"
     )
     filename = filename.replace(".", ",")
@@ -159,6 +176,7 @@ def main(
     all_dists, all_dists_samples = get_dists_and_samples(
         dims=dims, variance=marginal_var
     )
+
     variances = marginal_var * np.ones(dims, dtype=np.double)
     lengthscales = init_lengthscale * np.ones(dims, dtype=np.double)
     eps_schedule = get_eps_schedule(
