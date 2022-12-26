@@ -3,13 +3,14 @@ from pathlib import Path
 import shutil
 
 create_jobs = True
-num_workers = 2
-# objs = ["gpsample", "hartmann", "plant"]
-objs = ["plant"]
+num_workers = 8
+objs = ["airfoil"]
+#objs = ["gpsample", "hartmann", "plant"]
+#objs = ["plant"]
+#objs = ["gpsample", "hartmann"]
 acquisitions = ["ucb-cs_es2", "ucb-cs_es3", "ucb-cs_es4", "ucb-cs_es5"]
 
 missing_filenames = []
-
 
 for obj_name in objs:
     if obj_name == "gpsample":
@@ -17,6 +18,8 @@ for obj_name in objs:
     elif obj_name == "hartmann":
         budget = 200
     elif obj_name == "plant":
+        budget = 500
+    elif obj_name == "airfoil":
         budget = 500
     else:
         raise NotImplementedError
