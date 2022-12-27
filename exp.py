@@ -41,7 +41,7 @@ def gpsample():
 @ex.named_config
 def hartmann():
     obj_name = "hartmann"
-    acq_name = "ucb"
+    acq_name = "ucb-cs"
     dims = 6
     control_sets_id = 0
     costs_id = 2
@@ -79,7 +79,7 @@ def airfoil():
     dims = 5
     control_sets_id = 1
     costs_id = 0
-    eps_schedule_id = 0
+    eps_schedule_id = 2
     budget = 500
     var_id = 0
     noise_std = 0.01
@@ -176,7 +176,10 @@ def main(
     all_dists, all_dists_samples = get_dists_and_samples(
         dims=dims, variance=marginal_var
     )
-
+    # from core.dists import get_opt_queries_and_vals
+    # _, opt_vals = get_opt_queries_and_vals(
+    #     obj_func, control_sets, random_sets, all_dists_samples, bounds, max_mode="L-BFGS-B"
+    # )
     variances = marginal_var * np.ones(dims, dtype=np.double)
     lengthscales = init_lengthscale * np.ones(dims, dtype=np.double)
     eps_schedule = get_eps_schedule(

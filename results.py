@@ -1,6 +1,7 @@
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
 from sacred import Experiment
 from sacred.observers import FileStorageObserver
 
@@ -13,7 +14,7 @@ ex.observers.append(FileStorageObserver("../runs"))
 @ex.named_config
 def gpsample():
     obj_name = "gpsample"
-    budget = 100
+    budget = 50
     num_seeds = 5
     legend_loc = "best"
 
@@ -21,7 +22,7 @@ def gpsample():
 @ex.named_config
 def hartmann():
     obj_name = "hartmann"
-    budget = 500
+    budget = 200
     num_seeds = 5
     legend_loc = "best"
 
@@ -46,21 +47,27 @@ def main(
     text_size = 16
     tick_size = 10
     base_dir = "results/" + obj_name + "/"
-    save_dir = base_dir
+    save_dir = "results2/"
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
     pickles_dir = base_dir + "pickles/"
 
-    acquisitions = ["ucb-cs_es0", "ucb-cs_es1", "ucb", "ts"]
+    # acquisitions = ["ucb-cs_es2", "ucb-cs_es3", "ucb-cs_es4", "ucb-cs_es5", "ucb", "ts"]
+    acquisitions = ["ucb-cs_es2", "ucb-cs_es3", "ucb-cs_es4"]
     color_dict = {
         "ts": "#d7263d",
         "ucb": "#fbb13c",
-        "ucb-cs_es0": "#00a6ed",
-        "ucb-cs_es1": "#26c485",
+        "ucb-cs_es2": "black",
+        "ucb-cs_es3": "pink",
+        "ucb-cs_es4": "#26c485",
+        "ucb-cs_es5": "#00a6ed",
     }
     acq_name_dict = {
         "ts": "TS",
         "ucb": "UCB-PSQ",
-        "ucb-cs_es0": "UCB-PSQ-CS (Ada)",
-        "ucb-cs_es1": "UCB-PSQ-CS (Lin1)",
+        "ucb-cs_es2": "UCB-PSQ-CS (Lin200)",
+        "ucb-cs_es3": "UCB-PSQ-CS (Lin400)",
+        "ucb-cs_es4": "UCB-PSQ-CS (AdaLin)",
+        "ucb-cs_es5": "UCB-PSQ-CS (AdaLinVar)",
     }
 
     seeds = list(range(num_seeds))
@@ -87,10 +94,17 @@ def main(
                     acq_alias = acquisition + "_es0"
                     virtual_costs_id = 0
                     virtual_var_id = 0
+                    if obj_name == "gpsample":
+                        virtual_budget = 100
+                    elif obj_name == "hartmann":
+                        virtual_budget = 500
+                    else:
+                        virtual_budget = budget
                 else:
                     acq_alias = acquisition
                     virtual_costs_id = costs_id
                     virtual_var_id = var_id
+                    virtual_budget = budget
 
                 color = color_dict[acquisition]
                 all_cost_per_iter_cumusums = []
@@ -100,7 +114,7 @@ def main(
                 for i, seed in enumerate(seeds):
                     filename = (
                         f"{obj_name}_{acq_alias}_c{virtual_costs_id}"
-                        f"_var{virtual_var_id}_C{budget}_seed{seed}"
+                        f"_var{virtual_var_id}_C{virtual_budget}_seed{seed}"
                     )
                     filename = filename.replace(".", ",") + ".p"
                     (
@@ -140,6 +154,25 @@ def main(
                 ) / np.sqrt(num_seeds)
                 acq_name = acq_name_dict[acquisition]
 
+                # cut cost at budget
+                found_limit = False
+                if obj_name == "hartmann":
+                    desired_budget = 100
+                else:
+                    desired_budget = budget
+                for j, c in enumerate(cost_axis):
+                    if c > desired_budget:
+                        limit = j  # first index at which budget is exceeded
+                        found_limit = True
+                        # print(f"found limit for {acquisition}")
+                        break
+                if found_limit:
+                    cost_axis = cost_axis[:limit]
+                    mean_simple_regrets = mean_simple_regrets[:limit]
+                    std_err_simple_regrets = std_err_simple_regrets[:limit]
+                    mean_cumu_regrets = mean_cumu_regrets[:limit]
+                    std_err_cumu_regrets = std_err_cumu_regrets[:limit]
+
                 axs_simple.plot(
                     cost_axis, mean_simple_regrets, label=acq_name, color=color
                 )
@@ -176,6 +209,7 @@ def main(
                 axs_cumu.set_ylabel("Cumulative regret", size=text_size)
                 axs_cumu.tick_params(labelsize=tick_size)
                 axs_cumu.legend(fontsize=text_size - 2, loc=legend_loc)
+                # axs_cumu.set_yscale("log")
 
     fig_simple.tight_layout()
     fig_simple.savefig(

@@ -222,6 +222,7 @@ class UCB_PSQ(Acquisition):
                 bounds=bounds,
                 max_mode="L-BFGS-B",
             )
+            print(f"ucb opt vals: {opt_vals}")
             ret_control_idx = torch.argmax(opt_vals).item()
             ret_query = opt_queries[ret_control_idx]
 

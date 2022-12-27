@@ -4,11 +4,11 @@ import shutil
 
 create_jobs = True
 num_workers = 8
-objs = ["airfoil"]
-#objs = ["gpsample", "hartmann", "plant"]
-#objs = ["plant"]
-#objs = ["gpsample", "hartmann"]
-acquisitions = ["ucb-cs_es2", "ucb-cs_es3", "ucb-cs_es4", "ucb-cs_es5"]
+# objs = ["airfoil"]
+# objs = ["gpsample", "hartmann", "plant"]
+# objs = ["plant"]
+objs = ["gpsample"]
+acquisitions = ["ucb-cs_es2", "ucb-cs_es3", "ucb-cs_es4"]
 
 missing_filenames = []
 
@@ -16,11 +16,11 @@ for obj_name in objs:
     if obj_name == "gpsample":
         budget = 50
     elif obj_name == "hartmann":
-        budget = 200
+        budget = 100
     elif obj_name == "plant":
-        budget = 500
+        budget = 200
     elif obj_name == "airfoil":
-        budget = 500
+        budget = 200
     else:
         raise NotImplementedError
 

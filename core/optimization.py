@@ -1,4 +1,5 @@
 from botorch.models import SingleTaskGP
+import numpy as np
 import pickle
 import torch
 
@@ -63,11 +64,20 @@ def bo_loop(
         if len(control_sets[control_set_idx]) == dims:
             x_t = control_query
         else:
-            random_query = sample_from_random_sets(
-                all_dists=all_dists, random_set=random_sets[control_set_idx]
+            control_set = control_sets[control_set_idx]
+            random_set = random_sets[control_set_idx]
+            cat_idxs = np.concatenate([control_set, random_set])
+            order_idxs = np.array(
+                [np.where(cat_idxs == j)[0][0] for j in np.arange(len(cat_idxs))]
             )
-            x_t = torch.cat([control_query, random_query], dim=-1)
+            random_query = sample_from_random_sets(
+                all_dists=all_dists, random_set=random_set
+            )
+            unordered_x_t = torch.cat([control_query, random_query], dim=-1)
+            x_t = unordered_x_t[:, order_idxs]
         y_t = noisy_obj_func(x_t)  # (1 ,1)
+        print(f"x_t: {x_t}")
+        print(f"y_t: {y_t}")
 
         # Update datasets
         train_X = torch.cat([train_X, x_t])
