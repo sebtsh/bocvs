@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 import datetime
 from gpytorch.kernels import RFFKernel
-from memory_profiler import profile
 from time import process_time, time
 import torch
 
@@ -119,7 +118,6 @@ class UCB_PSQ(Acquisition):
         super().__init__()
         self.beta = beta
 
-    @profile
     def acquire(
         self,
         train_X,
