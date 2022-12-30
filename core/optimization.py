@@ -5,6 +5,7 @@ import torch
 
 from core.acquisitions import get_acquisition
 from core.dists import sample_from_random_sets
+from core.gp import ExactGPModel
 from core.utils import log
 
 
@@ -35,9 +36,11 @@ def bo_loop(
     while True:
         log(f"t = {t}, remaining budget: {remaining_budget}")
         # Acquire next query
-        gp = SingleTaskGP(
-            train_X=train_X, train_Y=train_y, likelihood=likelihood, covar_module=kernel
-        )
+        # gp = SingleTaskGP(
+        #     train_X=train_X, train_Y=train_y, likelihood=likelihood, covar_module=kernel
+        # )
+        gp = ExactGPModel(train_X, torch.squeeze(train_y), kernel, likelihood)
+        gp.eval()
 
         acquisition = get_acquisition(acq_name=acq_name)
 
