@@ -79,8 +79,6 @@ def bo_loop(
             unordered_x_t = torch.cat([control_query, random_query], dim=-1)
             x_t = unordered_x_t[:, order_idxs]
         y_t = noisy_obj_func(x_t)  # (1 ,1)
-        print(f"x_t: {x_t}")
-        print(f"y_t: {y_t}")
 
         # Update datasets
         train_X = torch.cat([train_X, x_t])
