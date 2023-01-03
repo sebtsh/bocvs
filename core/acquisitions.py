@@ -215,11 +215,19 @@ class UCB_PSQ_CS(Acquisition):
         eps = eps_schedule.next(opt_vals=opt_vals)
 
         max_val = torch.max(opt_vals)
-        ret_control_idx = torch.argmax(opt_vals).item()
+        ret_control_idx = None
+
         for i in range(len(opt_vals)):
             if opt_vals[i] + eps >= max_val:
-                ret_control_idx = i
-                break
+                if ret_control_idx is None or (
+                    costs[i] <= costs[ret_control_idx]
+                    and opt_vals[i] >= opt_vals[ret_control_idx]
+                ):
+                    ret_control_idx = i
+
+        if ret_control_idx is None:
+            ret_control_idx = torch.argmax(opt_vals).item()
+
         ret_query = opt_queries[ret_control_idx]
 
         return ret_control_idx, ret_query

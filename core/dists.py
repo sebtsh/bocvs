@@ -7,14 +7,8 @@ from core.utils import expectation_det, maximize_fn, log
 
 
 def get_marginal_var(var_id):
-    if var_id == 0:
-        return 0.01
-    elif var_id == 1:
-        return 0.04
-    elif var_id == 2:
-        return 0.08
-    else:
-        raise NotImplementedError
+    dic = {0: 0.005, 1: 0.01, 2: 0.02, 3: 0.04, 4: 0.08}
+    return dic[var_id]
 
 
 class Distribution(ABC):
