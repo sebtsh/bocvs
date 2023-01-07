@@ -1,5 +1,8 @@
+from botorch.models.utils import gpt_posterior_settings
+from botorch.posteriors import GPyTorchPosterior
 import gpytorch
 import torch
+from torch.nn import Module
 
 from core.utils import uniform_samples
 
@@ -14,6 +17,20 @@ class ExactGPModel(gpytorch.models.ExactGP):
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+
+
+class PosteriorModel(Module):
+    def __init__(self, custom_model):
+        super().__init__()
+        self.custom_model = custom_model
+        self.num_outputs = 1
+
+    def posterior(self, X):
+        self.custom_model.eval()
+        with gpt_posterior_settings():
+            mvn = self.custom_model(X)
+        posterior = GPyTorchPosterior(mvn=mvn)
+        return posterior
 
 
 def sample_gp_prior(kernel, bounds, num_points, jitter=1e-06):
