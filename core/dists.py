@@ -132,7 +132,13 @@ def get_dists_and_samples(dims, variance):
 
 
 def get_opt_queries_and_vals(
-    f, control_sets, random_sets, all_dists_samples, bounds, max_mode
+    f,
+    control_sets,
+    random_sets,
+    all_dists_samples,
+    bounds,
+    max_mode,
+    indices=None,
 ):
     m = len(control_sets)
     dims = bounds.shape[-1]
@@ -140,7 +146,10 @@ def get_opt_queries_and_vals(
     opt_queries = []
     opt_vals = []
 
-    for i in range(m):
+    if indices is None:
+        indices = np.arange(m)
+
+    for i in indices:
         # log(f"Getting opt query and val for control set {i}")
         control_set = control_sets[i]
 

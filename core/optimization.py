@@ -33,6 +33,9 @@ def bo_loop(
     all_eps = []
     remaining_budget = budget
     t = start_iter
+
+    acquisition = get_acquisition(acq_name=acq_name)
+
     while True:
         log(f"t = {t}, remaining budget: {remaining_budget}")
         # Acquire next query
@@ -41,8 +44,6 @@ def bo_loop(
         # )
         gp = ExactGPModel(train_X, torch.squeeze(train_y), kernel, likelihood)
         gp.eval()
-
-        acquisition = get_acquisition(acq_name=acq_name)
 
         control_set_idx, control_query = acquisition.acquire(
             train_X=train_X,
