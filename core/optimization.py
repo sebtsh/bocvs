@@ -17,7 +17,7 @@ def bo_loop(
     noisy_obj_func,
     start_iter,
     budget,
-    acq_name,
+    acquisition,
     bounds,
     all_dists,
     control_sets,
@@ -33,8 +33,6 @@ def bo_loop(
     all_eps = []
     remaining_budget = budget
     t = start_iter
-
-    acquisition = get_acquisition(acq_name=acq_name)
 
     while True:
         log(f"t = {t}, remaining budget: {remaining_budget}")

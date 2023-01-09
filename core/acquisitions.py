@@ -11,14 +11,22 @@ from core.gp import PosteriorModel
 from core.utils import log, maximize_fn
 
 
-def get_acquisition(acq_name):
+def get_acquisition(acq_name,
+                    eps_schedule_id):
     if acq_name == "ucb-cs":
         return UCB_PSQ_CS(beta=2.0)
     elif acq_name == "etc":
+        if eps_schedule_id == 0:
+            target_num_plays = np.array([50, 50])
+        elif eps_schedule_id == 1:
+            target_num_plays = np.array([100, 100])
+        else:
+            raise NotImplementedError
+
         return ETC_UCB_PSQ(
             beta=2.0,
             grouped_control_set_idxs=np.array([[0, 1, 2], [3, 4, 5]]),
-            target_num_plays=np.array([50, 50]),
+            target_num_plays=target_num_plays,
         )
     elif acq_name == "ucb":
         return UCB_PSQ(beta=2.0)

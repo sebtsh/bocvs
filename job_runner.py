@@ -7,6 +7,7 @@ import pickle
 import sys
 import torch
 
+from core.acquisitions import get_acquisition
 from core.dists import get_dists_and_samples, get_marginal_var
 from core.objectives import get_objective
 from core.optimization import bo_loop
@@ -151,6 +152,9 @@ def main(
         budget=budget,
     )
 
+    acquisition = get_acquisition(acq_name=acq_name,
+                                  eps_schedule_id=eps_schedule_id)
+
     # Optimization loop
     (final_X, final_y, control_set_idxs, control_queries, T, all_eps,) = bo_loop(
         train_X=init_X,
@@ -160,7 +164,7 @@ def main(
         noisy_obj_func=noisy_obj_func,
         start_iter=start_iter,
         budget=budget,
-        acq_name=acq_name,
+        acquisition=acquisition,
         bounds=bounds,
         all_dists=all_dists,
         control_sets=control_sets,

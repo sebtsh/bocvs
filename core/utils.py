@@ -203,3 +203,9 @@ def powerset(arr):
     for r in range(1, len(arr) + 1):
         pset += list(combinations(arr, r))
     return pset
+
+
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx

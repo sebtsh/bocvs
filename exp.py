@@ -8,6 +8,7 @@ from sacred import Experiment
 from sacred.observers import FileStorageObserver
 import torch
 
+from core.acquisitions import get_acquisition
 from core.dists import get_dists_and_samples, get_marginal_var
 from core.objectives import get_objective
 from core.optimization import bo_loop
@@ -24,11 +25,11 @@ ex.observers.append(FileStorageObserver("./runs"))
 @ex.named_config
 def gpsample():
     obj_name = "gpsample"
-    acq_name = "ucb-cs"
+    acq_name = "etc"
     dims = 3
     control_sets_id = 0
     costs_id = 0
-    eps_schedule_id = 2
+    eps_schedule_id = 1
     budget = 50
     var_id = 0
     noise_std = 0.01
@@ -192,6 +193,9 @@ def main(
         budget=budget,
     )
 
+    acquisition = get_acquisition(acq_name=acq_name,
+                                  eps_schedule_id=eps_schedule_id)
+
     # Optimization loop
     final_X, final_y, control_set_idxs, control_queries, T, all_eps = bo_loop(
         train_X=init_X,
@@ -201,7 +205,7 @@ def main(
         noisy_obj_func=noisy_obj_func,
         start_iter=start_iter,
         budget=budget,
-        acq_name=acq_name,
+        acquisition=acquisition,
         bounds=bounds,
         all_dists=all_dists,
         control_sets=control_sets,
