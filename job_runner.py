@@ -268,9 +268,9 @@ for params in all_params:  # run each experiment sequentially
         load_state = False
     elif obj_name == "hartmann":
         control_sets_id = 0
-        dims = 6
+        dims = 3
         noise_std = 0.01
-        init_lengthscale = 0.2
+        init_lengthscale = 0.1
         n_init_points = 5
         load_state = False
     elif obj_name == "plant":

@@ -31,7 +31,7 @@ def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
         )
 
     elif objective_name == "hartmann":
-        neg_obj = test_functions.Hartmann(dim=6, negate=True)
+        neg_obj = test_functions.Hartmann(dim=3, negate=True)
         bounds = neg_obj.bounds.to(dtype=torch.double)
         unsqueezed_obj = lambda x: neg_obj(x).unsqueeze(-1)
         if is_input_transform:
