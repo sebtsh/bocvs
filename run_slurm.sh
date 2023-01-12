@@ -6,4 +6,4 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --time=4320
 
-srun ./slurm_inner.sh "$1"
+srun ./slurm_inner.sh
