@@ -9,7 +9,7 @@ def get_eps_schedule(
     id, costs, control_sets, random_sets, variances, lengthscales, budget
 ):
     if id == 0:
-        return LinearSchedule(start_eps=2.0, cutoff_iter=int(budget / costs[-1]))
+        return None  # placeholder
     if id == 1:
         return LinearSchedule(start_eps=2.0, cutoff_iter=int(budget / costs[-1]))
     if id == 2:

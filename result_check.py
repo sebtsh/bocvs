@@ -3,42 +3,40 @@ from pathlib import Path
 import shutil
 
 create_jobs = True
-num_workers = 8
-# objs = ["airfoil"]
-# objs = ["gpsample", "hartmann", "plant"]
-# objs = ["plant"]
-objs = ["gpsample"]
-acquisitions = ["ucb-cs_es2", "ucb-cs_es3", "ucb-cs_es4"]
+num_workers = 0
+
+objs = ["gpsample", "hartmann", "plant", "airfoil"]
+acquisitions = ["etc_es0", "etc_es1", "etc_es2", "ucb", "ts"]
+
 
 missing_filenames = []
-
+counter = 1
 for obj_name in objs:
     if obj_name == "gpsample":
         budget = 50
     elif obj_name == "hartmann":
-        budget = 100
+        budget = 50
     elif obj_name == "plant":
         budget = 200
     elif obj_name == "airfoil":
-        budget = 200
+        budget = 50
     else:
         raise NotImplementedError
 
     base_dir = "results/" + obj_name + "/"
     save_dir = base_dir
     pickles_dir = base_dir + "pickles/"
+    Path(pickles_dir).mkdir(parents=True, exist_ok=True)
 
     for costs_id in range(3):
         costs_dict = {0: "Cheap", 1: "Moderate", 2: "Expensive"}
         costs_alias = costs_dict[costs_id]
-        for var_id in range(3):
-            var_dict = {0: 0.01, 1: 0.04, 2: 0.08}
-            variance = var_dict[var_id]
+        for var_id in [2, 3, 4]:
             for acquisition in acquisitions:
                 if acquisition == "ucb" or acquisition == "ts":
-                    acq_alias = acquisition + "_es0"
                     virtual_costs_id = 0
                     virtual_var_id = 0
+                    acq_alias = acquisition + "_es0"
                 else:
                     acq_alias = acquisition
                     virtual_costs_id = costs_id
@@ -52,8 +50,10 @@ for obj_name in objs:
                     filename = filename.replace(".", ",") + ".p"
 
                     if not os.path.isfile(pickles_dir + filename):
-                        missing_filenames.append(filename)
-                        print(f"{filename} is missing")
+                        if filename not in missing_filenames:
+                            missing_filenames.append(filename)
+                            print(f"{counter}. {filename} is missing")
+                            counter += 1
 
 if create_jobs:
     # Create job files
@@ -61,7 +61,11 @@ if create_jobs:
     if os.path.exists(job_dir):  # empty the job_dir directory
         shutil.rmtree(job_dir)
     Path(job_dir).mkdir(parents=True, exist_ok=True)
-
-    for i, f in enumerate(missing_filenames):
-        with open(job_dir + f"job{i % num_workers}.txt", "a") as file:
-            file.write(f"{f}\n")
+    if num_workers != 0:
+        for i, f in enumerate(missing_filenames):
+            with open(job_dir + f"job{i % num_workers}.txt", "a") as file:
+                file.write(f"{f}\n")
+    else:
+        for i, f in enumerate(missing_filenames):
+            with open(job_dir + f"job.txt", "a") as file:
+                file.write(f"{f}\n")

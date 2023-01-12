@@ -153,7 +153,8 @@ def main(
     )
 
     acquisition = get_acquisition(acq_name=acq_name,
-                                  eps_schedule_id=eps_schedule_id)
+                                  eps_schedule_id=eps_schedule_id,
+                                  costs=costs)
 
     # Optimization loop
     (final_X, final_y, control_set_idxs, control_queries, T, all_eps,) = bo_loop(

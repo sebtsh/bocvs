@@ -1,11 +1,11 @@
+from filelock import FileLock
 from gpytorch.likelihoods.gaussian_likelihood import GaussianLikelihood
 from gpytorch.kernels import ScaleKernel, RBFKernel
 import matplotlib
 import numpy as np
 from pathlib import Path
 import pickle
-from sacred import Experiment
-from sacred.observers import FileStorageObserver
+import sys
 import torch
 
 from core.acquisitions import get_acquisition
@@ -18,97 +18,56 @@ from core.utils import log, uniform_samples, load_most_recent_state
 
 
 matplotlib.use("Agg")
-ex = Experiment("CS-PSQ-BO")
-ex.observers.append(FileStorageObserver("./runs"))
+
+job_dir = "jobs/"
+job_filename = job_dir + f"job.txt"
+job_lockname = job_dir + f"job.txt.lock"
 
 
-@ex.named_config
-def gpsample():
-    obj_name = "gpsample"
-    acq_name = "etc"
-    dims = 3
-    control_sets_id = 0
-    costs_id = 0
-    eps_schedule_id = 1
-    budget = 50
-    var_id = 4
-    noise_std = 0.01
-    init_lengthscale = 0.1
-    n_init_points = 5
-    seed = 0
-    load_state = False
+def parse_params(param_string):
+    """
+    WARNING: assumes all ids and seeds have only 1 digit!
+    :param job_file:
+    :return:
+    """
+    params = param_string.split(sep="_")
+    obj_name = params[0]
+    acq_name = params[1]
+    eps_schedule_id = int(params[2][-1])
+    costs_id = int(params[3][-1])
+    var_id = int(params[4][-1])
+    budget = int(params[5][1:])
+    seed = int(params[6][4])
+    all_params = obj_name, acq_name, eps_schedule_id, costs_id, var_id, budget, seed
+
+    return all_params
 
 
-@ex.named_config
-def hartmann():
-    obj_name = "hartmann"
-    acq_name = "ei"
-    dims = 3
-    control_sets_id = 0
-    costs_id = 0
-    eps_schedule_id = 0
-    budget = 200
-    var_id = 0
-    noise_std = 0.01
-    init_lengthscale = 0.1
-    n_init_points = 5
-    seed = 0
-    load_state = False
-
-
-@ex.named_config
-def plant():
-    obj_name = "plant"
-    acq_name = "ucb"
-    dims = 5
-    control_sets_id = 0
-    costs_id = 0
-    eps_schedule_id = 0
-    budget = 500
-    var_id = 0
-    noise_std = 0.01
-    init_lengthscale = 0.2
-    n_init_points = 5
-    seed = 0
-    load_state = False
-
-
-@ex.named_config
-def airfoil():
-    obj_name = "airfoil"
-    acq_name = "etc"
-    dims = 5
-    control_sets_id = 1
-    costs_id = 0
-    eps_schedule_id = 0
-    budget = 50
-    var_id = 0
-    noise_std = 0.01
-    init_lengthscale = 0.2
-    n_init_points = 5
-    seed = 0
-    load_state = False
-
-
-@ex.automain
 def main(
     obj_name,
     acq_name,
-    dims,
-    control_sets_id,
-    costs_id,
     eps_schedule_id,
+    costs_id,
     var_id,
+    budget,
+    seed,
+    control_sets_id,
+    dims,
     noise_std,
     init_lengthscale,
     n_init_points,
-    budget,
-    seed,
     load_state,
 ):
     args = dict(locals().items())
     log(f"Running with parameters {args}")
-    run_id = ex.current_run._id
+
+    log(f"======== NEW RUN ========")
+    log(
+        (
+            f"{obj_name}, {acq_name}, eps_sched:{eps_schedule_id}, cost_id:{costs_id}"
+            f", var_id:{var_id}, C:{budget}, seed:{seed}"
+        )
+    )
     torch.manual_seed(seed)
 
     # Directory for saving results
@@ -177,10 +136,6 @@ def main(
     all_dists, all_dists_samples = get_dists_and_samples(
         dims=dims, variance=marginal_var
     )
-    # from core.dists import get_opt_queries_and_vals
-    # _, opt_vals = get_opt_queries_and_vals(
-    #     obj_func, control_sets, random_sets, all_dists_samples, bounds, max_mode="L-BFGS-B"
-    # )
     variances = marginal_var * np.ones(dims, dtype=np.double)
     lengthscales = init_lengthscale * np.ones(dims, dtype=np.double)
     eps_schedule = get_eps_schedule(
@@ -198,7 +153,7 @@ def main(
                                   costs=costs)
 
     # Optimization loop
-    final_X, final_y, control_set_idxs, control_queries, T, all_eps = bo_loop(
+    (final_X, final_y, control_set_idxs, control_queries, T, all_eps,) = bo_loop(
         train_X=init_X,
         train_y=init_y,
         likelihood=likelihood,
@@ -281,10 +236,80 @@ def main(
     print("cumu_regret:")
     print(cumu_regret)
     print("final y:")
-    print(final_y)
+    print(torch.squeeze(final_y))
     print("all_eps:")
     print(all_eps)
     print("control_set_idxs:")
     print(control_set_idxs)
+    print("count of each control set played:")
+    print(np.histogram(control_set_idxs, bins=np.arange(len(control_sets) + 1))[0])
 
-    log(f"Completed run {run_id} with parameters {args}")
+    log(f"Completed run with parameters {args}")
+
+
+while True:
+    lock = FileLock(job_lockname)
+    with lock:
+        with open(job_filename, 'r') as fin:
+            data = fin.read().splitlines(True)
+            if len(data) == 0:
+                print("job.txt is empty, exiting")
+                break
+
+        with open(job_filename, 'w') as fout:
+            fout.writelines(data[1:])
+
+    param_string = data[0]
+    params = parse_params(param_string)
+    print(f"params: {params}")
+
+    obj_name, acq_name, eps_schedule_id, costs_id, var_id, budget, seed = params
+
+    print("Getting configs")
+
+    if obj_name == "gpsample":
+        control_sets_id = 0
+        dims = 3
+        noise_std = 0.01
+        init_lengthscale = 0.1
+        n_init_points = 5
+        load_state = False
+    elif obj_name == "hartmann":
+        control_sets_id = 0
+        dims = 3
+        noise_std = 0.01
+        init_lengthscale = 0.1
+        n_init_points = 5
+        load_state = False
+    elif obj_name == "plant":
+        control_sets_id = 0
+        dims = 5
+        noise_std = 0.01
+        init_lengthscale = 0.2
+        n_init_points = 5
+        load_state = False
+    elif obj_name == "airfoil":
+        control_sets_id = 1
+        dims = 5
+        noise_std = 0.01
+        init_lengthscale = 0.2
+        n_init_points = 5
+        load_state = False
+    else:
+        raise NotImplementedError
+
+    main(
+        obj_name=obj_name,
+        acq_name=acq_name,
+        eps_schedule_id=eps_schedule_id,
+        costs_id=costs_id,
+        var_id=var_id,
+        budget=budget,
+        seed=seed,
+        control_sets_id=control_sets_id,
+        dims=dims,
+        noise_std=noise_std,
+        init_lengthscale=init_lengthscale,
+        n_init_points=n_init_points,
+        load_state=load_state,
+    )

@@ -1,9 +1,6 @@
-from botorch.models import SingleTaskGP
 import numpy as np
-import pickle
 import torch
 
-from core.acquisitions import get_acquisition
 from core.dists import sample_from_random_sets
 from core.gp import ExactGPModel
 from core.utils import log
@@ -86,8 +83,9 @@ def bo_loop(
         control_queries.append(control_query)
 
         # Epsilon schedule management
-        eps_schedule.update(prev_control_idx=control_set_idx)
-        all_eps.append(eps_schedule.last_eps)
+        if eps_schedule is not None:
+            eps_schedule.update(prev_control_idx=control_set_idx)
+            all_eps.append(eps_schedule.last_eps)
 
         # Loop management
         t += 1
