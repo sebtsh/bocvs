@@ -38,9 +38,9 @@ def get_acquisition(acq_name, eps_schedule_id, costs):
         return TS_PSQ(n_features=1024)
     elif acq_name == "ei":
         return EI_PSQ_CS()
-    elif acq_name == "ucb_naive":
+    elif acq_name == "ucb-naive":
         return UCB_PSQ_CVnaive(beta=2.0)
-    elif acq_name == "ts_naive":
+    elif acq_name == "ts-naive":
         return TS_PSQ_CVnaive(n_features=1024)
     else:
         raise Exception("Incorrect acq_name passed to get_acquisition")
