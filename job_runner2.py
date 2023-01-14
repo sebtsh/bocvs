@@ -148,9 +148,9 @@ def main(
         budget=budget,
     )
 
-    acquisition = get_acquisition(acq_name=acq_name,
-                                  eps_schedule_id=eps_schedule_id,
-                                  costs=costs)
+    acquisition = get_acquisition(
+        acq_name=acq_name, eps_schedule_id=eps_schedule_id, costs=costs
+    )
 
     # Optimization loop
     (final_X, final_y, control_set_idxs, control_queries, T, all_eps,) = bo_loop(
@@ -250,13 +250,13 @@ def main(
 while True:
     lock = FileLock(job_lockname)
     with lock:
-        with open(job_filename, 'r') as fin:
+        with open(job_filename, "r") as fin:
             data = fin.read().splitlines(True)
             if len(data) == 0:
                 print("job.txt is empty, exiting")
                 break
 
-        with open(job_filename, 'w') as fout:
+        with open(job_filename, "w") as fout:
             fout.writelines(data[1:])
 
     param_string = data[0]

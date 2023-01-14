@@ -25,7 +25,7 @@ ex.observers.append(FileStorageObserver("./runs"))
 @ex.named_config
 def gpsample():
     obj_name = "gpsample"
-    acq_name = "etc"
+    acq_name = "ts_naive"
     dims = 3
     control_sets_id = 0
     costs_id = 0
@@ -193,9 +193,9 @@ def main(
         budget=budget,
     )
 
-    acquisition = get_acquisition(acq_name=acq_name,
-                                  eps_schedule_id=eps_schedule_id,
-                                  costs=costs)
+    acquisition = get_acquisition(
+        acq_name=acq_name, eps_schedule_id=eps_schedule_id, costs=costs
+    )
 
     # Optimization loop
     final_X, final_y, control_set_idxs, control_queries, T, all_eps = bo_loop(
