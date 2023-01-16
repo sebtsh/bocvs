@@ -295,6 +295,13 @@ while True:
         init_lengthscale = 0.2
         n_init_points = 5
         load_state = False
+    elif obj_name == "cosine8":
+        control_sets_id = 0
+        dims = 8
+        noise_std = 0.01
+        init_lengthscale = 0.2
+        n_init_points = 5
+        load_state = False
     else:
         raise NotImplementedError
 

@@ -128,6 +128,19 @@ def get_control_sets(dims, control_id):
             ]
         else:
             raise NotImplementedError
+    elif dims == 8:
+        if control_id == 0:
+            inter = [
+                (0, 1, 2),
+                (3, 4, 5),
+                (5, 6, 7),
+                (0, 1, 2, 3, 4),
+                (2, 3, 4, 5, 6),
+                (3, 4, 5, 6, 7),
+                (0, 1, 2, 3, 4, 5, 6, 7),
+            ]
+        else:
+            raise NotImplementedError
     else:
         raise NotImplementedError
 

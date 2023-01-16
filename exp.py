@@ -25,7 +25,7 @@ ex.observers.append(FileStorageObserver("./runs"))
 @ex.named_config
 def gpsample():
     obj_name = "gpsample"
-    acq_name = "ts_naive"
+    acq_name = "etc"
     dims = 3
     control_sets_id = 0
     costs_id = 0
@@ -42,7 +42,7 @@ def gpsample():
 @ex.named_config
 def hartmann():
     obj_name = "hartmann"
-    acq_name = "ei"
+    acq_name = "etc"
     dims = 3
     control_sets_id = 0
     costs_id = 0
@@ -57,9 +57,26 @@ def hartmann():
 
 
 @ex.named_config
+def cosine8():
+    obj_name = "cosine8"
+    acq_name = "etc"
+    dims = 8
+    control_sets_id = 0
+    costs_id = 0
+    eps_schedule_id = 0
+    budget = 400
+    var_id = 0
+    noise_std = 0.01
+    init_lengthscale = 0.2
+    n_init_points = 5
+    seed = 0
+    load_state = False
+
+
+@ex.named_config
 def plant():
     obj_name = "plant"
-    acq_name = "ucb"
+    acq_name = "etc"
     dims = 5
     control_sets_id = 0
     costs_id = 0

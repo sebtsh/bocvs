@@ -43,6 +43,12 @@ def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
             obj_func = unsqueezed_obj
 
         opt_val = neg_obj.optimal_value
+    elif objective_name == "cosine8":
+        obj = test_functions.Cosine8()
+        bounds = torch.stack([torch.zeros(dims), torch.ones(dims)])
+        obj_func = lambda x: obj(x).unsqueeze(-1)
+        opt_val = obj.optimal_value
+
     elif objective_name == "plant":
         bounds = torch.tensor(
             [[0, 7.7], [0, 3.5], [0, 10.4], [8.9, 11.3], [2.5, 6.5]], dtype=torch.double
