@@ -5,8 +5,11 @@ import shutil
 create_jobs = True
 num_workers = 0
 
-objs = ["gpsample", "hartmann", "plant", "airfoil"]
-acquisitions = ["etc_es0", "etc_es1", "etc_es2", "ucb", "ts"]
+# objs = ["gpsample", "hartmann", "plant", "airfoil"]
+# objs = ["airfoil"]
+# objs = ["gpsample"]
+# acquisitions = ["ts", "ucb", "etc_es0", "etc_es1", "etc_es2"]
+acquisitions = ["etc_es0", "etc_es1", "etc_es2"]
 
 
 missing_filenames = []
@@ -34,9 +37,13 @@ for obj_name in objs:
         for var_id in [2, 3, 4]:
             for acquisition in acquisitions:
                 if acquisition == "ucb" or acquisition == "ts":
-                    virtual_costs_id = 0
-                    virtual_var_id = 0
                     acq_alias = acquisition + "_es0"
+                    if obj_name == "airfoil":
+                        virtual_costs_id = costs_id
+                        virtual_var_id = var_id
+                    else:
+                        virtual_costs_id = 0
+                        virtual_var_id = 0
                 else:
                     acq_alias = acquisition
                     virtual_costs_id = costs_id

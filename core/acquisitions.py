@@ -67,6 +67,10 @@ class Acquisition(ABC):
 
 
 class EI_PSQ_CS(Acquisition):
+    """
+    WARNING: as implemented, assumes the full query control set is available.
+    """
+
     def __init__(self):
         super().__init__()
 

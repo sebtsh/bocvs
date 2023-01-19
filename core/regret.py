@@ -129,3 +129,22 @@ def plot_regret(
         plt.savefig(save_dir + filename, bbox_inches="tight")
     if show_plot:
         plt.show()
+
+
+def first_index_of_conv(control_set_idxs, best_idx):
+    v = len(control_set_idxs)
+    first_index = v - 1
+    for j in range(1, v + 1):
+        if control_set_idxs[v - j] == best_idx:
+            first_index = v - j
+        else:
+            break
+    return first_index
+
+
+def get_sample_regret_from_cumu(cumu_regret):
+    sample_regret = np.zeros(len(cumu_regret))
+    sample_regret[0] = cumu_regret[0]
+    for j in range(1, len(cumu_regret)):
+        sample_regret[j] = cumu_regret[j] - cumu_regret[j - 1]
+    return sample_regret

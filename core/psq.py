@@ -157,13 +157,6 @@ def get_costs(cost_id):
         costs = np.array([0.6, 0.6, 0.6, 0.8, 0.8, 0.8, 1.0])
     else:
         raise NotImplementedError
-    #
-    # if obj_name == "airfoil":
-    #     # since airfoil does not have a fully deterministic control set,
-    #     # the costs are arranged to match the expected value of each
-    #     # control set
-    #     order = np.array([3, 0, 4, 1, 6, 5, 2])
-    #     costs = costs[order]
 
     return costs
 
