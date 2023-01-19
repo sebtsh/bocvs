@@ -1,8 +1,6 @@
 import datetime
-import glob
 from itertools import combinations
 import numpy as np
-import pickle
 from scipy.optimize import minimize
 import torch
 
@@ -29,34 +27,6 @@ def minmax_normalize(arr):
     b = torch.max(arr)
     a = torch.min(arr)
     return (arr - a) / (b - a)
-
-
-def load_most_recent_state(inter_save_dir, filename):
-    path = inter_save_dir + f"{filename}-iter*.p"
-    save_list = glob.glob(path)
-    if len(save_list) == 0:
-        print(f"No save states with path {path} found")
-        train_X, train_y, state_dict, max_iter = None, None, None, None
-    else:
-        # Get most recent
-        max_iter = 0
-        for i, save_path in enumerate(save_list):
-            cur_iter = int(
-                save_path[
-                    len(inter_save_dir)
-                    + len(filename)
-                    + len("-iter") : len(save_path)
-                    - len(".p")
-                ]
-            )
-            if cur_iter > max_iter:
-                most_recent_idx = i
-                max_iter = cur_iter
-        most_recent_path = save_list[most_recent_idx]
-        print(f"Loading iter {max_iter} from {most_recent_path}")
-        train_X, train_y, state_dict = pickle.load(open(most_recent_path, "rb"))
-
-    return train_X, train_y, state_dict, max_iter
 
 
 def maximize_fn(f, bounds, mode="L-BFGS-B", n_warmup=100, n_iter=5):

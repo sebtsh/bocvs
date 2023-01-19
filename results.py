@@ -54,7 +54,6 @@ def main(
     budget,
     num_seeds,
     legend_loc,
-    #    figsize=(20, 6.5),
     figsize=(20, 20),
     dpi=200,
 ):
@@ -65,17 +64,8 @@ def main(
     Path(save_dir).mkdir(parents=True, exist_ok=True)
     pickles_dir = base_dir + "pickles/"
 
-    # acquisitions = ["etc_es0", "etc_es1", "etc_es2"]
     acquisitions = ["ts", "ucb", "etc_es0", "etc_es1", "etc_es2"]
-    # acquisitions = ["ts", "ucb", "ts-naive_es0", "ucb-naive_es0", "ei_es0", "etc_es0", "etc_es1", "etc_es2"]
-    # color_dict = {
-    #     "ts": "#d7263d",
-    #     "ucb": "#fbb13c",
-    #     "ucb-cs_es2": "black",
-    #     "ucb-cs_es3": "pink",
-    #     "ucb-cs_es4": "#26c485",
-    #     "ucb-cs_es5": "#00a6ed",
-    # }
+
     color_dict = {
         "ts": "black",
         "ucb": "#d7263d",
@@ -110,9 +100,9 @@ def main(
         print(f"======== costs_id: {costs_id} ========")
         costs_dict = {0: "Cheap", 1: "Moderate", 2: "Expensive"}
         costs_alias = costs_dict[costs_id]
-        for var_id in [2, 3, 4]:
+        for var_id in range(3):
             print(f"==== var_id: {var_id} ====")
-            var_dict = {0: 0.005, 1: 0.01, 2: 0.02, 3: 0.04, 4: 0.08}
+            var_dict = {0: 0.02, 1: 0.04, 2: 0.08}
             variance = var_dict[var_id]
             axs_simple = all_axs_simple[costs_id][var_id - 2]
             axs_cumu = all_axs_cumu[costs_id][var_id - 2]
@@ -200,30 +190,10 @@ def main(
                 std_err_cumu_regrets = np.std(
                     interpolated_all_cumu_regrets, axis=0
                 ) / np.sqrt(num_seeds)
-                # mean_T = np.mean(all_T)
-                # std_err_T = np.std(all_T) / np.sqrt(num_seeds)
+
                 # average time after which the algorithm ONLY chooses the
                 # best control set
                 mean_first_budget = np.mean(all_first_budgets)
-                # std_err_first_budget = np.std(all_first_budgets) / np.sqrt(num_seeds)
-                # mean_first_iter = np.mean(all_first_iters)
-                # std_err_first_iter = np.std(all_first_iters) / np.sqrt(num_seeds)
-                # if len(all_mean_sample_regret_with_best) != 0:
-                #     mean_sample_regret_with_best = np.mean(
-                #         all_mean_sample_regret_with_best
-                #     )
-                #     std_err_sample_regret_with_best = np.std(
-                #         all_mean_sample_regret_with_best
-                #     ) / np.sqrt(num_seeds)
-                #     print(
-                #         f"    Cumu regret with best: {mean_sample_regret_with_best} +/- {std_err_sample_regret_with_best}"
-                #     )
-
-                # print(
-                #     f"    first budget: {mean_first_budget} +/- {std_err_first_budget}"
-                # )
-                # print(f"    first iter: {mean_first_iter} +/- {std_err_first_iter}")
-                # print(f"    T: {mean_T} +/- {std_err_T}")
 
                 # cut cost at budget
                 found_limit = False
@@ -231,7 +201,6 @@ def main(
                     if c > budget:
                         limit = j  # first index at which budget is exceeded
                         found_limit = True
-                        # print(f"found limit for {acquisition}")
                         break
                 if found_limit:
                     cost_axis = cost_axis[:limit]
@@ -293,8 +262,7 @@ def main(
                 axs_cumu.set_xlabel("Budget $C$", size=text_size)
                 axs_cumu.set_ylabel("Cumulative regret", size=text_size)
                 axs_cumu.tick_params(labelsize=tick_size)
-                # axs_cumu.legend(fontsize=text_size - 2, loc=legend_loc)
-                # axs_cumu.set_yscale("log")
+                axs_cumu.legend(fontsize=text_size - 2, loc=legend_loc)
 
     fig_simple.tight_layout()
     fig_simple.savefig(

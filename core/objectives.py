@@ -1,11 +1,11 @@
 from botorch import test_functions
 from botorch.models import SingleTaskGP
-from marchantia.core.synth_func import create_synth_funcs_combined
 import pickle
 import torch
 
 from core.gp import sample_gp_prior
-from core.utils import maximize_fn, log
+from core.utils import maximize_fn
+from data.plant.plant_funcs import create_synth_funcs_combined
 
 
 def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
@@ -43,11 +43,6 @@ def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
             obj_func = unsqueezed_obj
 
         opt_val = neg_obj.optimal_value
-    elif objective_name == "cosine8":
-        obj = test_functions.Cosine8()
-        bounds = torch.stack([torch.zeros(dims), torch.ones(dims)])
-        obj_func = lambda x: obj(x).unsqueeze(-1)
-        opt_val = obj.optimal_value
 
     elif objective_name == "plant":
         bounds = torch.tensor(

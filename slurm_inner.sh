@@ -7,4 +7,4 @@ ulimit -d unlimited
 ulimit -m unlimited
 ulimit -v unlimited
 
-CUDA_VISIBLE_DEVICES=-1 python job_runner2.py
+CUDA_VISIBLE_DEVICES=-1 python job_runner.py

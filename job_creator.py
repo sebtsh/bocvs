@@ -5,11 +5,8 @@ import shutil
 create_jobs = True
 num_workers = 0
 
-# objs = ["gpsample", "hartmann", "plant", "airfoil"]
-# objs = ["airfoil"]
-# objs = ["gpsample"]
-# acquisitions = ["ts", "ucb", "etc_es0", "etc_es1", "etc_es2"]
-acquisitions = ["etc_es0", "etc_es1", "etc_es2"]
+objs = ["gpsample", "hartmann", "plant", "airfoil"]
+acquisitions = ["ts", "ucb", "etc_es0", "etc_es1", "etc_es2"]
 
 
 missing_filenames = []
@@ -42,6 +39,9 @@ for obj_name in objs:
                         virtual_costs_id = costs_id
                         virtual_var_id = var_id
                     else:
+                        # if full control query set exists,
+                        # costs and variances do not matter
+                        # for UCB-PSQ and TS-PSQ
                         virtual_costs_id = 0
                         virtual_var_id = 0
                 else:
@@ -49,7 +49,7 @@ for obj_name in objs:
                     virtual_costs_id = costs_id
                     virtual_var_id = var_id
 
-                for seed in range(5):
+                for seed in range(10):
                     filename = (
                         f"{obj_name}_{acq_alias}_c{virtual_costs_id}"
                         f"_var{virtual_var_id}_C{budget}_seed{seed}"

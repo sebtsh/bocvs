@@ -22,8 +22,6 @@ def bo_loop(
     all_dists_samples,
     costs,
     eps_schedule,
-    filename,
-    inter_save_dir,
 ):
     control_set_idxs = []
     control_queries = []
@@ -33,13 +31,9 @@ def bo_loop(
 
     while True:
         log(f"t = {t}, remaining budget: {remaining_budget}")
-        # Acquire next query
-        # gp = SingleTaskGP(
-        #     train_X=train_X, train_Y=train_y, likelihood=likelihood, covar_module=kernel
-        # )
+
         gp = ExactGPModel(train_X, torch.squeeze(train_y), kernel, likelihood)
         gp.eval()
-
         control_set_idx, control_query = acquisition.acquire(
             train_X=train_X,
             train_y=train_y,
@@ -84,25 +78,11 @@ def bo_loop(
 
         # Epsilon schedule management
         if eps_schedule is not None:
-            eps_schedule.update(prev_control_idx=control_set_idx)
+            eps_schedule.update()
             all_eps.append(eps_schedule.last_eps)
 
         # Loop management
         t += 1
         remaining_budget = remaining_budget - cost
-
-        # Save state every 50 iterations
-        # if t != 0 and t % 50 == 0:
-        #     pickle.dump(
-        #         (
-        #             train_X,
-        #             train_y,
-        #             control_set_idxs,
-        #             control_queries,
-        #             t,
-        #             remaining_budget,
-        #         ),
-        #         open(inter_save_dir + f"{filename}-iter{t}.p", "wb"),
-        #     )
 
     return train_X, train_y, control_set_idxs, control_queries, t, all_eps

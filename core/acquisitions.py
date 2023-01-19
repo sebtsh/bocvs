@@ -11,8 +11,10 @@ from core.utils import maximize_fn
 
 def get_acquisition(acq_name, eps_schedule_id, costs):
     if acq_name == "ucb-cs":
-        return UCB_PSQ_CS(beta=2.0)
+        return UCB_CV_PSQ(beta=2.0)
     elif acq_name == "etc":
+        # For ETC, we cannot define the required eps_schedule a priori,
+        # so we do it like this
         if eps_schedule_id == 0:
             target_num_plays = np.array([50, 50])
         elif eps_schedule_id == 1:
@@ -37,7 +39,7 @@ def get_acquisition(acq_name, eps_schedule_id, costs):
     elif acq_name == "ts":
         return TS_PSQ(n_features=1024)
     elif acq_name == "ei":
-        return EI_PSQ_CS()
+        return EI_CV_PSQ()
     elif acq_name == "ucb-naive":
         return UCB_PSQ_CVnaive(beta=2.0)
     elif acq_name == "ts-naive":
@@ -66,7 +68,7 @@ class Acquisition(ABC):
         pass
 
 
-class EI_PSQ_CS(Acquisition):
+class EI_CV_PSQ(Acquisition):
     """
     WARNING: as implemented, assumes the full query control set is available.
     """
@@ -353,7 +355,7 @@ class UCB_PSQ(Acquisition):
         return ret_control_idx, ret_query
 
 
-class UCB_PSQ_CS(Acquisition):
+class UCB_CV_PSQ(Acquisition):
     def __init__(self, beta):
         super().__init__()
         self.beta = beta
