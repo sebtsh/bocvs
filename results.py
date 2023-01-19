@@ -104,8 +104,8 @@ def main(
             print(f"==== var_id: {var_id} ====")
             var_dict = {0: 0.02, 1: 0.04, 2: 0.08}
             variance = var_dict[var_id]
-            axs_simple = all_axs_simple[costs_id][var_id - 2]
-            axs_cumu = all_axs_cumu[costs_id][var_id - 2]
+            axs_simple = all_axs_simple[costs_id][var_id]
+            axs_cumu = all_axs_cumu[costs_id][var_id]
 
             axs_simple.grid(which="major")
             axs_simple.grid(which="minor", linestyle=":", alpha=0.3)

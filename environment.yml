@@ -1,4 +1,4 @@
-name: cv-psq-bo
+name: cvpsqbo
 channels:
   - gpytorch
   - conda-forge
