@@ -1,6 +1,5 @@
-# CV-PSQ-BO
-This code repository accompanies the paper "Pratical Bayesian Optimization
-with Cost-Varying Partially Specified Queries".
+# BOCVS
+This code repository accompanies the paper "Bayesian Optimization with Cost-varying Variable Subsets".
 
 ## Installation
 The easiest way to install the required dependencies is to use Anaconda
@@ -11,7 +10,7 @@ conda env create -f environment.yml
 ```
 The environment can then be used with
 ```bash
-conda activate cvpsqbo
+conda activate bocvs
 ```
 Alternatively, the dependencies can be installed manually using 
 ``environment.yml`` as reference.

@@ -1,4 +1,4 @@
-name: cvpsqbo
+name: bocvs
 channels:
   - gpytorch
   - conda-forge
