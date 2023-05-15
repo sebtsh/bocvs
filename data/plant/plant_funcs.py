@@ -42,133 +42,43 @@ def init_heteroscedastic_gp(num_inducing, d):
     return model
 
 
-def create_synth_funcs_combined(standardize=False):
-    """
-    :return:
-    """
+def create_leaf_max_area_func(standardize=False):
     NUM_INDUCING = 464
     DIMS = 5
     LEAF_MAX_AREA_DATA_MEAN = 108.59035777465141
     LEAF_MAX_AREA_DATA_STD = 107.55729094567415
-    TIPBURN_MAX_AREA_DATA_MEAN = 6.275219678628352
-    TIPBURN_MAX_AREA_DATA_STD = 11.549100802973099
-    TIPBURN_START_TIME_DATA_MEAN = 211.641268474607
-    TIPBURN_START_TIME_DATA_STD = 67.94811451416922
 
-    def create_leaf_max_area_func():
-        dict_name = "gp_leaf_dict.p"
-        gp = init_heteroscedastic_gp(num_inducing=NUM_INDUCING, d=DIMS)
-        data = pkgutil.get_data(__name__, dict_name)
-        param_dict = pickle.loads(data)
-        gpf.utilities.multiple_assign(gp, param_dict)
+    dict_name = "gp_leaf_dict.p"
+    gp = init_heteroscedastic_gp(num_inducing=NUM_INDUCING, d=DIMS)
+    data = pkgutil.get_data(__name__, dict_name)
+    param_dict = pickle.loads(data)
+    gpf.utilities.multiple_assign(gp, param_dict)
 
-        def leaf_max_area_func(X):
-            """
-            Returns the predictive mean and variance of the maximum leaf area.
-            :param X: Array of shape (num_preds, 5). Columns are Ca [0, 7.7] log uM, B [0, 3.5] log uM,
-            NH3 [0, 10.4] log uM, K  [8.9, 11.3] log uM, pH [2.5, 6.5].
-            :return: Tuple (array of shape (num_preds, 1), array of shape (num_preds, 1). First element is mean, second
-            is variance.
-            """
-            mean, var = gp.predict_y(X)
-            return mean.numpy() * (
-                LEAF_MAX_AREA_DATA_STD
-            ) + LEAF_MAX_AREA_DATA_MEAN, var.numpy() * (LEAF_MAX_AREA_DATA_STD**2)
+    def leaf_max_area_func(X):
+        """
+        Returns the predictive mean and variance of the maximum leaf area.
+        :param X: Array of shape (num_preds, 5). Columns are Ca [0, 7.7] log uM, B [0, 3.5] log uM,
+        NH3 [0, 10.4] log uM, K  [8.9, 11.3] log uM, pH [2.5, 6.5].
+        :return: Tuple (array of shape (num_preds, 1), array of shape (num_preds, 1). First element is mean, second
+        is variance.
+        """
+        mean, var = gp.predict_y(X)
+        return mean.numpy() * (
+            LEAF_MAX_AREA_DATA_STD
+        ) + LEAF_MAX_AREA_DATA_MEAN, var.numpy() * (LEAF_MAX_AREA_DATA_STD**2)
 
-        def leaf_max_area_func_standardized(X):
-            """
-            Returns the predictive mean and variance of the maximum leaf area standardized.
-            :param X: Array of shape (num_preds, 5). Columns are Ca [0, 7.7] log uM, B [0, 3.5] log uM,
-            NH3 [0, 10.4] log uM, K  [8.9, 11.3] log uM, pH [2.5, 6.5].
-            :return: Tuple (array of shape (num_preds, 1), array of shape (num_preds, 1). First element is mean, second
-            is variance.
-            """
-            mean, var = gp.predict_y(X)
-            return mean.numpy(), var.numpy()
+    def leaf_max_area_func_standardized(X):
+        """
+        Returns the predictive mean and variance of the maximum leaf area standardized.
+        :param X: Array of shape (num_preds, 5). Columns are Ca [0, 7.7] log uM, B [0, 3.5] log uM,
+        NH3 [0, 10.4] log uM, K  [8.9, 11.3] log uM, pH [2.5, 6.5].
+        :return: Tuple (array of shape (num_preds, 1), array of shape (num_preds, 1). First element is mean, second
+        is variance.
+        """
+        mean, var = gp.predict_y(X)
+        return mean.numpy(), var.numpy()
 
-        if not standardize:
-            return leaf_max_area_func
-        else:
-            return leaf_max_area_func_standardized
-
-    def create_tipburn_max_area_func():
-        dict_name = "gp_tbm_dict.p"
-        gp = init_heteroscedastic_gp(num_inducing=NUM_INDUCING, d=DIMS)
-        data = pkgutil.get_data(__name__, dict_name)
-        param_dict = pickle.loads(data)
-        gpf.utilities.multiple_assign(gp, param_dict)
-
-        def tipburn_max_area_func(X):
-            """
-            Returns the predictive mean and variance of the maximum tipburn area.
-            :param X: Array of shape (num_preds, 5). Columns are Ca [0, 7.7] log uM, B [0, 3.5] log uM,
-            NH3 [0, 10.4] log uM, K  [8.9, 11.3] log uM, pH [2.5, 6.5].
-            :return: Tuple (array of shape (num_preds, 1), array of shape (num_preds, 1). First element is mean, second
-            is variance.
-            """
-            mean, var = gp.predict_y(X)
-            return mean.numpy() * (
-                TIPBURN_MAX_AREA_DATA_STD
-            ) + TIPBURN_MAX_AREA_DATA_MEAN, var.numpy() * (
-                TIPBURN_MAX_AREA_DATA_STD**2
-            )
-
-        def tipburn_max_area_func_standardized(X):
-            """
-            Returns the predictive mean and variance of the maximum tipburn area standardized.
-            :param X: Array of shape (num_preds, 5). Columns are Ca [0, 7.7] log uM, B [0, 3.5] log uM,
-            NH3 [0, 10.4] log uM, K  [8.9, 11.3] log uM, pH [2.5, 6.5].
-            :return: Tuple (array of shape (num_preds, 1), array of shape (num_preds, 1). First element is mean, second
-            is variance.
-            """
-            mean, var = gp.predict_y(X)
-            return mean.numpy(), var.numpy()
-
-        if not standardize:
-            return tipburn_max_area_func
-        else:
-            return tipburn_max_area_func_standardized
-
-    def create_tipburn_start_time_func():
-        dict_name = "gp_tbs_dict.p"
-        gp = init_heteroscedastic_gp(num_inducing=NUM_INDUCING, d=DIMS)
-        data = pkgutil.get_data(__name__, dict_name)
-        param_dict = pickle.loads(data)
-        gpf.utilities.multiple_assign(gp, param_dict)
-
-        def tipburn_start_time_func(X):
-            """
-            Returns the predictive mean and variance of the tipburn start time.
-            :param X: Array of shape (num_preds, 5). Columns are Ca [0, 7.7] log uM, B [0, 3.5] log uM,
-            NH3 [0, 10.4] log uM, K  [8.9, 11.3] log uM, pH [2.5, 6.5].
-            :return: Tuple (array of shape (num_preds, 1), array of shape (num_preds, 1). First element is mean, second
-            is variance.
-            """
-            mean, var = gp.predict_y(X)
-            return mean.numpy() * (
-                TIPBURN_START_TIME_DATA_STD
-            ) + TIPBURN_START_TIME_DATA_MEAN, var.numpy() * (
-                TIPBURN_START_TIME_DATA_STD**2
-            )
-
-        def tipburn_start_time_func_standardized(X):
-            """
-            Returns the predictive mean and variance of the tipburn start time standardized.
-            :param X: Array of shape (num_preds, 5). Columns are Ca [0, 7.7] log uM, B [0, 3.5] log uM,
-            NH3 [0, 10.4] log uM, K  [8.9, 11.3] log uM, pH [2.5, 6.5].
-            :return: Tuple (array of shape (num_preds, 1), array of shape (num_preds, 1). First element is mean, second
-            is variance.
-            """
-            mean, var = gp.predict_y(X)
-            return mean.numpy(), var.numpy()
-
-        if not standardize:
-            return tipburn_start_time_func
-        else:
-            return tipburn_start_time_func_standardized
-
-    return (
-        create_leaf_max_area_func(),
-        create_tipburn_max_area_func(),
-        create_tipburn_start_time_func(),
-    )
+    if not standardize:
+        return leaf_max_area_func
+    else:
+        return leaf_max_area_func_standardized

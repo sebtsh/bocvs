@@ -5,7 +5,7 @@ import torch
 
 from core.gp import sample_gp_prior
 from core.utils import maximize_fn
-from data.plant.plant_funcs import create_synth_funcs_combined
+from data.plant.plant_funcs import create_leaf_max_area_func
 
 
 def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
@@ -48,7 +48,7 @@ def get_objective(objective_name, noise_std, is_input_transform, kernel, dims):
         bounds = torch.tensor(
             [[0, 7.7], [0, 3.5], [0, 10.4], [8.9, 11.3], [2.5, 6.5]], dtype=torch.double
         ).T
-        leafarea_meanvar_func = create_synth_funcs_combined(standardize=True)[0]
+        leafarea_meanvar_func = create_leaf_max_area_func(standardize=True)
         obj_func = lambda x: torch.tensor(
             leafarea_meanvar_func(x.numpy())[0], dtype=torch.double
         )
