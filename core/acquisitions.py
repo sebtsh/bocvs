@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from botorch.sampling import SobolQMCNormalSampler
 from gpytorch.kernels import RFFKernel
 import numpy as np
+import time
 import torch
 
 from core.dists import get_opt_queries_and_vals
@@ -10,8 +11,8 @@ from core.utils import maximize_fn
 
 
 def get_acquisition(acq_name, eps_schedule_id, costs):
-    if acq_name == "ucb-cs":
-        return UCB_CV_PSQ(beta=2.0)
+    if acq_name == "ucb-cvs":
+        return UCB_CVS(beta=2.0)
     elif acq_name == "etc":
         # For ETC, we cannot define the required eps_schedule a priori,
         # so we do it like this
@@ -29,7 +30,7 @@ def get_acquisition(acq_name, eps_schedule_id, costs):
         else:
             raise NotImplementedError
 
-        return ETC_UCB_PSQ(
+        return ETC_UCB_CVS(
             beta=2.0,
             grouped_control_set_idxs=np.array([[0, 1, 2], [3, 4, 5]]),
             target_num_plays=target_num_plays,
@@ -39,9 +40,9 @@ def get_acquisition(acq_name, eps_schedule_id, costs):
     elif acq_name == "ts":
         return TS_PSQ(n_features=1024)
     elif acq_name == "ei":
-        return EI_CV_PSQ()
+        return EI_CVnaive()
     elif acq_name == "ucb-naive":
-        return UCB_PSQ_CVnaive(beta=2.0)
+        return UCB_CVS_naive(beta=2.0)
     elif acq_name == "ts-naive":
         return TS_PSQ_CVnaive(n_features=1024)
     else:
@@ -68,7 +69,7 @@ class Acquisition(ABC):
         pass
 
 
-class EI_CV_PSQ(Acquisition):
+class EI_CVnaive(Acquisition):
     """
     WARNING: as implemented, assumes the full query control set is available.
     """
@@ -187,6 +188,7 @@ class TS_PSQ(Acquisition):
         eps_schedule,
         costs,
     ):
+        start = time.process_time()
         dims = bounds.shape[-1]
 
         # Thompson sampling via random Fourier features
@@ -237,6 +239,8 @@ class TS_PSQ(Acquisition):
             ret_control_idx = torch.argmax(opt_vals).item()
             ret_query = opt_queries[ret_control_idx]
 
+        elapsed_time = time.process_time() - start
+        print(f"Elapsed CPU time: {elapsed_time}")
         return ret_control_idx, ret_query
 
 
@@ -355,7 +359,7 @@ class UCB_PSQ(Acquisition):
         return ret_control_idx, ret_query
 
 
-class UCB_CV_PSQ(Acquisition):
+class UCB_CVS(Acquisition):
     def __init__(self, beta):
         super().__init__()
         self.beta = beta
@@ -408,7 +412,7 @@ class UCB_CV_PSQ(Acquisition):
         return ret_control_idx, ret_query
 
 
-class ETC_UCB_PSQ(Acquisition):
+class ETC_UCB_CVS(Acquisition):
     def __init__(self, beta, grouped_control_set_idxs, target_num_plays):
         """
 
@@ -434,6 +438,8 @@ class ETC_UCB_PSQ(Acquisition):
         eps_schedule,
         costs,
     ):
+        start = time.process_time()
+
         def ucb(X):
             f_preds = gp(X)
             mean = f_preds.mean
@@ -475,10 +481,12 @@ class ETC_UCB_PSQ(Acquisition):
             ret_control_idx = indices[torch.argmax(opt_vals).item()]
             ret_query = opt_queries[torch.argmax(opt_vals).item()]
 
+        elapsed_time = time.process_time() - start
+        print(f"Elapsed CPU time: {elapsed_time}")
         return ret_control_idx, ret_query
 
 
-class UCB_PSQ_CVnaive(Acquisition):
+class UCB_CVS_naive(Acquisition):
     def __init__(self, beta):
         super().__init__()
         self.beta = beta
@@ -495,12 +503,6 @@ class UCB_PSQ_CVnaive(Acquisition):
         eps_schedule,
         costs,
     ):
-        # def ucb(X):
-        #     posterior = gp.posterior(X=X)
-        #     mean = posterior.mean
-        #     variance = posterior.variance
-        #     return mean + self.beta * torch.sqrt(variance)
-
         def ucb(X):
             f_preds = gp(X)
             mean = f_preds.mean

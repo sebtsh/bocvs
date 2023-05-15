@@ -142,7 +142,14 @@ def main(
     )
 
     # Optimization loop
-    (final_X, final_y, control_set_idxs, control_queries, T, all_eps,) = bo_loop(
+    (
+        final_X,
+        final_y,
+        control_set_idxs,
+        control_queries,
+        T,
+        all_eps,
+    ) = bo_loop(
         train_X=init_X,
         train_y=init_y,
         likelihood=likelihood,
