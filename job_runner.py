@@ -11,7 +11,7 @@ from core.acquisitions import get_acquisition
 from core.dists import get_dists_and_samples, get_marginal_var
 from core.objectives import get_objective
 from core.optimization import bo_loop
-from core.psq import get_control_sets_and_costs, get_eps_schedule
+from core.cvs import get_control_sets_and_costs, get_eps_schedule
 from core.regret import get_regret, plot_regret
 from core.utils import log, uniform_samples
 
