@@ -7,7 +7,7 @@ from core.utils import expectation_det, maximize_fn
 
 
 def get_marginal_var(var_id):
-    dic = {0: 0.02, 1: 0.04, 2: 0.08}
+    dic = {2: 0.02, 3: 0.04, 4: 0.08}
     return dic[var_id]
 
 

@@ -6,7 +6,7 @@ create_jobs = True
 num_workers = 0
 
 objs = ["gpsample", "hartmann", "plant", "airfoil"]
-acquisitions = ["ts", "ucb", "etc_es0", "etc_es1", "etc_es2"]
+acquisitions = ["ei_es0"]
 
 
 missing_filenames = []
